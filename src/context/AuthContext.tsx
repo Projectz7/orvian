@@ -108,7 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (cachedEmp) {
             try {
               const parsed = typeof cachedEmp === 'string' ? JSON.parse(cachedEmp) : cachedEmp;
-              if (parsed?.empresaId) {
+              // Regra do ecossistema: só funcionário ativo tem acesso
+              if (parsed?.ativo === false) {
+                await storage.remove(EMP_KEY);
+                setEmpresaToken(null);
+              } else if (parsed?.empresaId) {
                 // Seta contexto de empresa ANTES de consultar para RLS funcionar
                 if (parsed.token) {
                   setEmpresaToken(parsed.token);

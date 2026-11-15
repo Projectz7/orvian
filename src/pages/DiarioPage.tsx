@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { AtividadesService } from '@/lib/orvianService';
 import type { Atividade } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DiarioPage() {
+  const { empresaId } = useAuth();
   const [atividades, setAtividades] = useState<Atividade[]>([]);
-  useEffect(() => { AtividadesService.list(200).then(setAtividades); }, []);
+  useEffect(() => { AtividadesService.list(200, empresaId).then(setAtividades); }, [empresaId]);
 
   const grouped: Record<string, Atividade[]> = {};
   atividades.forEach((a) => { (grouped[a.data] = grouped[a.data] || []).push(a); });

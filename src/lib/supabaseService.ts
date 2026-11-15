@@ -2,32 +2,37 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Obra, Funcionario, Equipe, Plano, Tarefa, StatusPlano } from "@/types";
 
 // ---------- Obras (do schema do di-gest) ----------
-export async function fetchObras(): Promise<Obra[]> {
-  const { data, error } = await supabase
+export async function fetchObras(empresaId?: string | null): Promise<Obra[]> {
+  let q = supabase
     .from("obras")
-    .select("id, titulo, cliente, status, endereco, created_at")
+    .select("id, titulo, cliente, status, endereco, created_at, empresa_id")
     .order("created_at", { ascending: true });
+  if (empresaId) q = q.eq("empresa_id", empresaId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data || []) as unknown as Obra[];
 }
 
-export async function fetchObra(id: string): Promise<Obra | null> {
-  const { data, error } = await supabase
+export async function fetchObra(id: string, empresaId?: string | null): Promise<Obra | null> {
+  let q = supabase
     .from("obras")
-    .select("id, titulo, cliente, status, endereco, created_at")
-    .eq("id", id)
-    .maybeSingle();
+    .select("id, titulo, cliente, status, endereco, created_at, empresa_id")
+    .eq("id", id);
+  if (empresaId) q = q.eq("empresa_id", empresaId);
+  const { data, error } = await q.maybeSingle();
   if (error) throw error;
   return data as unknown as Obra;
 }
 
 // ---------- Funcionários ----------
-export async function fetchFuncionarios(): Promise<Funcionario[]> {
-  const { data, error } = await supabase
+export async function fetchFuncionarios(empresaId?: string | null): Promise<Funcionario[]> {
+  let q = supabase
     .from("funcionarios")
-    .select("id, nome, is_gerente, ativo, equipe_id, telefone, custo_diario, tipo_contrato")
+    .select("id, nome, is_gerente, ativo, equipe_id, telefone, custo_diario, tipo_contrato, empresa_id")
     .eq("ativo", true)
     .order("nome", { ascending: true });
+  if (empresaId) q = q.eq("empresa_id", empresaId);
+  const { data, error } = await q;
   if (error) throw error;
 
   const funcs = (data || []) as unknown as Funcionario[];
@@ -52,11 +57,13 @@ export async function fetchFuncionarios(): Promise<Funcionario[]> {
 }
 
 // ---------- Equipes ----------
-export async function fetchEquipes(): Promise<Equipe[]> {
-  const { data, error } = await supabase
+export async function fetchEquipes(empresaId?: string | null): Promise<Equipe[]> {
+  let q = supabase
     .from("equipes")
     .select("id, nome, cor, empresa_id")
     .order("nome", { ascending: true });
+  if (empresaId) q = q.eq("empresa_id", empresaId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data || []) as unknown as Equipe[];
 }

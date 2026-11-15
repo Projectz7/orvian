@@ -14,6 +14,29 @@ import { Loader2, ArrowLeft, Plus, Flag, CheckCircle2, Lock, RefreshCw, Pencil, 
 import { toast } from "sonner";
 import type { Obra, Funcionario, Plano, Tarefa, StatusPlano, StatusTarefa, Equipe } from "@/types";
 import { cn } from "@/lib/utils";
+
+/**
+ * PLANEJAMENTO AVANÇADO (planos / plano_tarefas)
+ * ---------------------------------------------
+ * Sistema RICO para gestão de cronograma físico-financeiro.
+ * Tabelas: planos + plano_tarefas
+ * Recursos:
+ *   - Hierarquia de tarefas (parent_id, ordem)
+ *   - Múltiplas visualizações: Tabela, Kanban (customizável), Gantt, Lista, Agenda
+ *   - Drag-and-drop para reordenar e mudar status
+ *   - Cálculo de custo de mão de obra (por responsável ou equipe, CLT/PJ)
+ *   - Progresso automático (filhas → mães) ou manual
+ *   - Sincronismo Google Calendar (Edge Function)
+ *   - Planos em "rascunho" (editável) vs "fechado" (congelado)
+ * Uso: Gestores/planejadores para cronograma completo com custos.
+ * 
+ * PLANEJAMENTO DE CAMPO (PlanejamentoPage - orv_planejamentos)
+ * ------------------------------------------------------------
+ * Sistema SIMPLES para planejamento diário de campo.
+ * Tabela: orv_planejamentos
+ * Recursos: datas original/atual, responsável, situação, reprogramação com justificativa
+ * Uso: Engenheiros/mestres no canteiro para controle diário simples.
+ */
 import {
   fetchObra, fetchFuncionarios, fetchPlanosByObra, createPlano, updatePlanoStatus,
   fetchTarefasByPlano, updateTarefa, deleteTarefa, createTarefa, reagruparFilhas,
@@ -116,8 +139,8 @@ export default function ObraPlanoPage() {
     (async () => {
       setLoading(true);
       try {
-const [ob, funcs, plans, eqs] = await Promise.all([
-          fetchObra(obraId), fetchFuncionarios(), fetchPlanosByObra(obraId), fetchEquipes(),
+        const [ob, funcs, plans, eqs] = await Promise.all([
+          fetchObra(obraId, empresaId), fetchFuncionarios(empresaId), fetchPlanosByObra(obraId), fetchEquipes(empresaId),
         ]);
         setObra(ob);
         setFuncionarios(funcs);

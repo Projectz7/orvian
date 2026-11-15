@@ -1,27 +1,62 @@
-﻿# PLAN — ORVIAN (Gestão de Obras)
+# PLAN.md — Orvian: Correções Críticas e Implementações
 
-App de gestão, execução e acompanhamento de obras (PT-BR). Reutiliza Supabase `pnijzmqygibhwbcnkklm` (p7store); repo GitHub e projeto Vercel `orvian`. Stack: Vite+React+TS+Tailwind+shadcn, Supabase (Auth/DB/Storage), ExcelJS (export com imagens), jsPDF.
+## Objetivo do App
+Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gerencia obras, propostas, serviços, etapas, planejamentos, diários, controles de execução, evidências fotográficas e relatórios — com visão Kanban/Gantt/Lista/Agenda/Tabela e sincronismo Google Calendar.
 
-## Etapas
-1. [x] Scaffold adaptado (auth P7Store, rotas, layout, menu)
-2. [x] Migration Supabase: tabelas orv_* criadas + RLS + bucket storage (aplicação manual pendente)
-3. [x] Cadastros dinâmicos (obras, propostas, serviços, elementos, etapas) - modelos reutilizáveis pendente
-4. [x] Lançamento rápido de atividades (atualização automática de progresso pendente)
-5. [x] Diário de obras (organização por dia; geração de texto e versões pendentes)
-6. [x] Controle físico de execução (status por etapa; cartões/barra/timeline pendentes)
-7. [ ] Cálculo de avanço físico (pendente)
-8. [x] Planejamento (atividades planejadas + revisões; Gantt/vínculos pendentes)
-9. [ ] Dashboard geral (indicadores, filtros em cascata, gráficos)
-10. [ ] Apresentação executiva (capa, modos, exportação PDF)
-11. [x] Histórico fotográfico semanal (dom-sáb, upload foto; galeria pendente)
-12. [x] Módulo de fotografias/documentos (storage separado; visualizador pendente)
-13. [x] Exportação Excel completa (abas + bases; imagens incorporadas pendente)
-14. [ ] Exportação PDF
-15. [ ] Integração Power BI (views, dimensões, fatos)
-16. [ ] Usuários e permissões (admin/gestor/colaborador/visualizador, auditoria)
-17. [ ] Responsividade e usabilidade no canteiro (offline rascunhos)
-18. [ ] Importação dos dados dos Excel (Diário de Obra + Modelo), migração com conferência
-19. [ ] Automações/IA (resumos, alertas) sem inventar dados
-20. [ ] Testes funcionais e validação (12 testes da spec)
-21. [ ] Integração P7Store (tile, ADMIN_APPS, apps_liberados, SSO /access/:token)
-22. [ ] Build, repo GitHub orvian, deploy Vercel
+---
+
+## Problemas Críticos Encontrados na Auditoria
+
+### 🔴 Bloqueiam Build / Segurança
+1. **Tipos TypeScript ausentes** — `Plano`, `Tarefa`, `Equipe`, `Funcionario`, `StatusPlano`, `StatusTarefa` importados de `@/types` mas não definidos em `src/types/index.ts`
+2. **FK incorreta na migration** — `orv_planejamentos.obra_id` referencia `public.orv_obras(id)` mas a tabela real é `public.obras` (compartilhada)
+3. **RLS policies inseguras** — Todas usam `using (true)`; devem filtrar por `empresa_id` via token/header ou auth.uid()
+4. **Auth não valida `ativo` do funcionário** — Permite acesso mesmo se `funcionario.ativo === false` (regra do ecossistema)
+5. **`ObraPlanoPage` e services não filtram por `empresaId`** — Isolamento multi-tenant quebrado
+6. **Storage bucket sem RLS** — `orvian-evidencias` não tem policies
+7. **Types Supabase não gerados** — `src/integrations/supabase/types.ts` é placeholder vazio
+8. **RelatóriosPage consulta tabela inexistente** — Usa `orv_obras` em vez de `obras`
+
+### 🟠 Duplicação de Sistema
+9. **Dois planejamentos** — `PlanejamentoPage` usa `orv_planejamentos` (simples) e `ObraPlanoPage` usa `planos`/`plano_tarefas` (rico). Precisam convergir ou separar claramente.
+
+---
+
+## Etapas de Correção (Priorizadas por Dependência)
+
+### Etapa 1 — Tipos TypeScript e Build Zero Erros
+- [ ] 1.1 Adicionar interfaces `Plano`, `Tarefa`, `Equipe`, `Funcionario`, `StatusPlano`, `StatusTarefa` em `src/types/index.ts`
+- [ ] 1.2 Corrigir importações em `ObraPlanoPage.tsx` e `supabaseService.ts`
+- [ ] 1.3 Executar `npm run build` e confirmar zero erros
+
+### Etapa 2 — Migration: FK, empresa_id, Índices, RLS
+- [ ] 2.1 Nova migration corrigindo FK `orv_planejamentos.obra_id` → `public.obras(id)`
+- [ ] 2.2 Adicionar `empresa_id` em todas as tabelas `orv_*` que não têm
+- [ ] 2.3 Adicionar índices compostos (`empresa_id` + FKs)
+- [ ] 2.4 Reescrever RLS policies para multi-tenant (dono via auth.uid, funcionário via `x-empresa-token`)
+
+### Etapa 3 — Storage RLS
+- [ ] 3.1 Policies no bucket `orvian-evidencias` (read/write por empresa via token)
+
+### Etapa 4 — Auth Hardening
+- [ ] 4.1 Em `AuthContext`: bloquear se `funcionario.ativo === false`
+- [ ] 4.2 Garantir filtro `empresaId` em todas as queries de `ObraPlanoPage` e `supabaseService`
+
+### Etapa 5 — Unificar/Clarear Planejamentos
+- [ ] 5.1 Decidir: manter `orv_planejamentos` (campo) OU migrar para `planos`/`plano_tarefas` (gestor)
+- [ ] 5.2 Documentar propósito no README/código; ajustar páginas
+
+### Etapa 6 — Types Supabase e Relatórios
+- [ ] 6.1 Rodar `supabase gen-types` e atualizar `src/integrations/supabase/types.ts`
+- [ ] 6.2 Corrigir `RelatoriosPage`: `orv_obras` → `obras`
+- [ ] 6.3 Remover casts `as any` desnecessários
+
+### Etapa 7 — Páginas Placeholder → Funcionais
+- [ ] 7.1 `CapaPage`: Dashboard resumido + KPIs + atalhos
+- [ ] 7.2 `ApresentacaoPage`: Visão executiva (progresso, custos, cronograma)
+- [ ] 7.3 `ConfiguracoesPage`: Configurações empresa/app
+
+### Etapa 8 — Ajustes Finais e Deploy
+- [ ] 8.1 Corrigir `ObrasService.create`: `nome` → `titulo`
+- [ ] 8.2 Integrar `AgendaView` no switcher (TODO F7.3.6)
+- [ ] 8.3 Build final, commit, deploy Vercel

@@ -5,10 +5,12 @@ import type { Obra, Proposta, Servico, Etapa } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 
 const STATUSES = ['nao_iniciado','planejado','em_execucao','parcialmente_executado','concluido','bloqueado','suspenso','cancelado'];
 
 export default function ControlePage() {
+  const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
   const [propostas, setPropostas] = useState<Proposta[]>([]);
@@ -18,7 +20,7 @@ export default function ControlePage() {
   const [etapas, setEtapas] = useState<Etapa[]>([]);
   const [controle, setControle] = useState<Record<string, any>>({});
 
-  useEffect(() => { ObrasService.list().then(setObras); }, []);
+  useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
   useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
   useEffect(() => {

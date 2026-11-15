@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ObrasService, PropostasService } from '@/lib/orvianService';
+import { useAuth } from '@/context/AuthContext';
 import type { Obra, Proposta } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Plus } from 'lucide-react';
 const titulo = (o: Obra) => o.nome || 'Obra sem título';
 
 export default function ObrasPage() {
+  const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [nome, setNome] = useState('');
   const [cliente, setCliente] = useState('');
@@ -16,8 +18,8 @@ export default function ObrasPage() {
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [propNome, setPropNome] = useState('');
 
-  const load = async () => { try { setObras(await ObrasService.list()); } catch (e) { console.error(e); } };
-  useEffect(() => { load(); }, []);
+  const load = async () => { try { setObras(await ObrasService.list(empresaId)); } catch (e) { console.error(e); } };
+  useEffect(() => { load(); }, [empresaId]);
 
   const addObra = async () => {
     if (!nome.trim()) return;

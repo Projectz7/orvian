@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
+import { ObrasService } from '@/lib/orvianService';
 
 export default function DashboardPage() {
+  const { empresaId } = useAuth();
   const [counts, setCounts] = useState({ obras: 0, propostas: 0, servicos: 0, atividades: 0, etapas: 0 });
 
   useEffect(() => {
     (async () => {
-      const [o, p, s, a, e] = await Promise.all([
-        supabase.from('obras' as any).select('id', { count: 'exact', head: true }),
-        supabase.from('orv_propostas' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
-        supabase.from('orv_servicos' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
-        supabase.from('orv_atividades' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
-        supabase.from('orv_etapas' as any).select('id', { count: 'exact', head: true }),
+      if (!empresaId) return;
+      const obras = await ObrasService.list(empresaId);
+      const obraIds = obras.map((o) => o.id);
+      const inObra = (q: any) => obraIds.length ? q.in('obra_id', obraIds) : q;
+      const [p, s, a, e] = await Promise.all([
+        inObra(supabase.from('orv_propostas' as any).select('id', { count: 'exact', head: true })),
+        inObra(supabase.from('orv_servicos' as any).select('id', { count: 'exact', head: true })),
+        inObra(supabase.from('orv_atividades' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null)),
+        inObra(supabase.from('orv_etapas' as any).select('id', { count: 'exact', head: true })),
       ]);
-      setCounts({ obras: o.count || 0, propostas: p.count || 0, servicos: s.count || 0, atividades: a.count || 0, etapas: e.count || 0 });
+      setCounts({ obras: obras.length, propostas: p.count || 0, servicos: s.count || 0, atividades: a.count || 0, etapas: e.count || 0 });
     })();
-  }, []);
+  }, [empresaId]);
 
   return (
     <div className="space-y-4">

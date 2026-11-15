@@ -21,6 +21,7 @@ export default function AccessPage() {
 
       const row = typeof data === 'string' ? JSON.parse(data) : data;
       if (row.error) { setError(row.error); return; }
+      if (row.ativo === false) { setError('Funcionário inativo. Acesso negado.'); return; }
 
       const sess = {
         id: row.id, nome: row.nome, cpf: row.cpf,

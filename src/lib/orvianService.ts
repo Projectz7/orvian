@@ -2,9 +2,12 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Elemento, Etapa, Atividade } from '@/types';
 
 // Obras reutilizam a tabela compartilhada public.obras (PreciCalc/DiGest/PlanSeven)
+// SEMPRE filtradas pela empresa do usuário logado (dono ou funcionário por token)
 export const ObrasService = {
-  async list(): Promise<Obra[]> {
-    const { data, error } = await supabase.from('obras' as any).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').order('created_at', { ascending: false });
+  async list(empresaId?: string | null): Promise<Obra[]> {
+    let q = supabase.from('obras' as any).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at');
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
     return (data || []) as unknown as Obra[];
   },
@@ -95,8 +98,16 @@ export const EtapasService = {
 };
 
 export const AtividadesService = {
-  async list(limit = 50): Promise<Atividade[]> {
-    const { data, error } = await supabase.from('orv_atividades' as any).select('*').is('deleted_at', null).order('data', { ascending: false }).limit(limit);
+  async list(limit = 50, empresaId?: string | null): Promise<Atividade[]> {
+    let obraIds: string[] | null = null;
+    if (empresaId) {
+      const obras = await ObrasService.list(empresaId);
+      obraIds = obras.map((o) => o.id);
+      if (obraIds.length === 0) return [];
+    }
+    let q = supabase.from('orv_atividades' as any).select('*').is('deleted_at', null);
+    if (obraIds) q = q.in('obra_id', obraIds);
+    const { data, error } = await q.order('data', { ascending: false }).limit(limit);
     if (error) throw error;
     return (data || []) as Atividade[];
   },

@@ -5,10 +5,27 @@ import type { Obra, Proposta, Servico } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
+
+/**
+ * PLANEJAMENTO DE CAMPO (orv_planejamentos)
+ * ---------------------------------------
+ * Sistema SIMPLES para planejamento de atividades de campo/diário.
+ * Tabela: orv_planejamentos (atividades com datas original/atual, responsável, situação)
+ * Uso: Engenheiros/ mestres de obra no canteiro para registrar o que foi planejado vs realizado.
+ * Diferenciação: Não tem hierarquia, não tem Kanban/Gantt, não tem custos.
+ * 
+ * PLANEJAMENTO AVANÇADO (ObraPlanoPage - planos/plano_tarefas)
+ * -----------------------------------------------------------
+ * Sistema RICO para gestão de cronograma, custos e execução.
+ * Tabelas: planos + plano_tarefas (hierárquicas, Kanban, Gantt, custos MO, Google Calendar)
+ * Uso: Gestores/planejadores para cronograma físico-financeiro completo.
+ */
 
 interface Plan { id: string; descricao: string; data_planejada_original: string; data_planejada_atual: string; data_conclusao_real: string | null; responsavel: string | null; situacao: string; }
 
 export default function PlanejamentoPage() {
+  const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
   const [propostas, setPropostas] = useState<Proposta[]>([]);
@@ -22,7 +39,7 @@ export default function PlanejamentoPage() {
   const [dataAtual, setDataAtual] = useState('');
   const [resp, setResp] = useState('');
 
-  useEffect(() => { ObrasService.list().then(setObras); }, []);
+  useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
   useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
   useEffect(() => { if (obraId) loadPlans(); }, [obraId, propostaId, servicoId]);

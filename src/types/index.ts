@@ -75,3 +75,89 @@ export interface Atividade {
   observacoes?: string | null;
   status_etapa?: string | null;
 }
+
+// --- Tipos do módulo Planejamento Avançado (planos / plano_tarefas) ---
+
+export type StatusPlano = 'rascunho' | 'fechado';
+
+export type StatusTarefa = 'a_fazer' | 'fazendo' | 'concluida' | 'bloqueada' | 'cancelada';
+
+export type PrioridadeTarefa = 'baixa' | 'media' | 'alta' | 'critica';
+
+export interface KanbanColumn {
+  id: string;
+  label: string;
+  status: StatusTarefa;
+  ordem: number;
+  fixa?: boolean; // colunas "A fazer" e "Concluída" não podem ser removidas
+}
+
+export interface Plano {
+  id: string;
+  empresa_id: string;
+  obra_id: string;
+  nome: string;
+  status: StatusPlano;
+  kanban_cols?: KanbanColumn[];
+  google_calendar_config?: {
+    syncEnabled: boolean;
+    calendarId?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    lastSync?: string;
+  };
+  created_at: string;
+  updated_at: string;
+  fechado_em?: string | null;
+}
+
+export interface Equipe {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  cor?: string | null;
+  created_at?: string;
+}
+
+export interface Funcionario {
+  id: string;
+  empresa_id?: string | null;
+  nome: string;
+  cpf?: string | null;
+  telefone?: string | null;
+  email?: string | null;
+  is_gerente?: boolean;
+  ativo?: boolean;
+  equipe_id?: string | null;
+  equipe_ids?: string[];
+  custo_diario?: number | null;
+  tipo_contrato?: 'CLT' | 'PJ' | null;
+  created_at?: string;
+}
+
+export interface Tarefa {
+  id: string;
+  empresa_id: string;
+  obra_id: string;
+  plano_id: string;
+  titulo: string;
+  descricao?: string | null;
+  status: StatusTarefa;
+  prioridade: PrioridadeTarefa;
+  responsavel_id?: string | null;
+  equipe_id?: string | null;
+  parent_id?: string | null;
+  ordem: number;
+  data_inicio?: string | null;
+  data_fim?: string | null;
+  data_inicio_real?: string | null;
+  data_fim_real?: string | null;
+  progresso: number;
+  progresso_manual?: boolean;
+  horas_estimadas?: number | null;
+  peso_tarefa?: number | null;
+  responsavel?: { id: string; nome: string } | null;
+  responsavelNome?: string | null;
+  created_at: string;
+  updated_at: string;
+}

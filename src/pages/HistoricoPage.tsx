@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Upload } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 function weekDays(base: Date) {
   const d = new Date(base);
@@ -22,6 +23,7 @@ function weekDays(base: Date) {
 }
 
 export default function HistoricoPage() {
+  const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
   const [propostas, setPropostas] = useState<Proposta[]>([]);
@@ -29,7 +31,7 @@ export default function HistoricoPage() {
   const [base, setBase] = useState(new Date());
   const [evids, setEvids] = useState<any[]>([]);
 
-  useEffect(() => { ObrasService.list().then(setObras); }, []);
+  useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); }, [obraId]);
 
   const days = weekDays(base);

@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LancamentoPage() {
+  const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
   const [propostas, setPropostas] = useState<Proposta[]>([]);
@@ -25,7 +27,7 @@ export default function LancamentoPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
-  useEffect(() => { ObrasService.list().then(setObras); }, []);
+  useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
   useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
   useEffect(() => { if (servicoId) { ElementosService.listByServico(servicoId).then(setElementos); EtapasService.listByServico(servicoId).then(setEtapas); } else { setElementos([]); setEtapas([]); } }, [servicoId]);
