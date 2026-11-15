@@ -57,6 +57,13 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [ ] 7.3 `ConfiguracoesPage`: Configurações empresa/app
 
 ### Etapa 8 — Ajustes Finais e Deploy
-- [ ] 8.1 Corrigir `ObrasService.create`: `nome` → `titulo`
-- [ ] 8.2 Integrar `AgendaView` no switcher (TODO F7.3.6)
-- [ ] 8.3 Build final, commit, deploy Vercel
+- [x] 8.1 Corrigir `ObrasService.create`: `nome` → `titulo`
+- [x] 8.2 Integrar `AgendaView` no switcher (TODO F7.3.6)
+- [x] 8.3 Build final, commit, deploy Vercel
+
+### Etapa 9 — Apresentação: Filtros Obra + Contrato/Proposta
+- [x] 9.1 Filtro de Obra (Select) na `ApresentacaoPage` — filtra todos os dados pela obra selecionada
+- [x] 9.2 Filtro de Contrato/Proposta (Select) — filtra por proposta específica dentro da obra (ou todas as propostas da empresa)
+- [x] 9.3 Tabela detalhada de contratos/propostas quando obra específica selecionada (serviços, elementos, etapas, atividades, execução %)
+- [x] 9.4 KPIs, gráficos e tabela resumo respeitam os filtros aplicados
+- [x] 9.5 Rodapé mostra obra/contrato selecionado
