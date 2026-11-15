@@ -1,24 +1,32 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Elemento, Etapa, Atividade } from '@/types';
 
+// Obras reutilizam a tabela compartilhada public.obras (PreciCalc/DiGest/PlanSeven)
 export const ObrasService = {
   async list(): Promise<Obra[]> {
-    const { data, error } = await supabase.from('orv_obras' as any).select('*').is('deleted_at', null).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('obras' as any).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').order('created_at', { ascending: false });
     if (error) throw error;
-    return (data || []) as Obra[];
+    return (data || []) as unknown as Obra[];
   },
   async create(o: Partial<Obra>): Promise<Obra> {
-    const { data, error } = await supabase.from('orv_obras' as any).insert(o).select().single();
+    const payload: any = { titulo: o.nome, cliente: o.cliente, endereco: o.localizacao };
+    const { data, error } = await supabase.from('obras' as any).insert(payload).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
-    return data as Obra;
+    return data as unknown as Obra;
   },
   async update(id: string, o: Partial<Obra>): Promise<Obra> {
-    const { data, error } = await supabase.from('orv_obras' as any).update({ ...o, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    const payload: any = {};
+    if (o.nome !== undefined) payload.titulo = o.nome;
+    if (o.cliente !== undefined) payload.cliente = o.cliente;
+    if (o.localizacao !== undefined) payload.endereco = o.localizacao;
+    if (o.situacao !== undefined) payload.status = o.situacao;
+    const { data, error } = await supabase.from('obras' as any).update(payload).eq('id', id).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
-    return data as Obra;
+    return data as unknown as Obra;
   },
-  async remove(id: string) {
-    await supabase.from('orv_obras' as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  async remove(_id: string) {
+    // obras compartilhadas não são apagadas pelo ORVIAN (geridas pelo DiGest/PreciCalc)
+    throw new Error('Exclusão de obras é gerenciada pelo DiGest/PreciCalc.');
   },
 };
 

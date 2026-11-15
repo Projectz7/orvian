@@ -1,17 +1,16 @@
+// Obra = linha da tabela compartilhada public.obras (PreciCalc/DiGest/PlanSeven)
 export interface Obra {
   id: string;
   empresa_id?: string | null;
-  nome: string;
+  nome?: string | null;      // mapeia titulo
   cliente?: string | null;
-  localizacao?: string | null;
-  responsavel_geral?: string | null;
+  localizacao?: string | null; // mapeia endereco
+  responsavel_geral?: string | null; // mapeia responsavel
   data_inicio?: string | null;
   prazo_contratual?: string | null;
-  previsao_conclusao?: string | null;
+  previsao_conclusao?: string | null; // mapeia data_fim
   descricao?: string | null;
-  situacao?: string | null;
-  foto_destaque_url?: string | null;
-  deleted_at?: string | null;
+  situacao?: string | null;  // mapeia status
 }
 
 export interface Proposta {

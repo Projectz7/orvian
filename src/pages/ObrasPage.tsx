@@ -4,7 +4,9 @@ import type { Obra, Proposta } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
+
+const titulo = (o: Obra) => o.nome || 'Obra sem título';
 
 export default function ObrasPage() {
   const [obras, setObras] = useState<Obra[]>([]);
@@ -24,7 +26,7 @@ export default function ObrasPage() {
     load();
   };
 
-  const delObra = async (id: string) => { await ObrasService.remove(id); load(); };
+  const delObra = async (_id: string) => { /* obras compartilhadas não são excluídas pelo ORVIAN */ };
 
   const openObra = async (o: Obra) => {
     setSelected(o);
@@ -56,16 +58,15 @@ export default function ObrasPage() {
             {obras.map((o) => (
               <div key={o.id} className={`flex items-center justify-between p-2 rounded border ${selected?.id === o.id ? 'bg-slate-100' : ''}`}>
                 <button className="text-left flex-1" onClick={() => openObra(o)}>
-                  <div className="font-medium">{o.nome}</div>
+                  <div className="font-medium">{titulo(o)}</div>
                   <div className="text-xs text-muted-foreground">{o.cliente}</div>
                 </button>
-                <button onClick={() => delObra(o.id)} className="text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
               </div>
             ))}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Propostas {selected ? `— ${selected.nome}` : ''}</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Propostas {selected ? `— ${titulo(selected)}` : ''}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {selected && (
               <>

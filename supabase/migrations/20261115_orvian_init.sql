@@ -1,29 +1,13 @@
 -- ORVIAN - Schema inicial (gestao de obras)
 -- Reutiliza projeto Supabase pnijzmqygibhwbcnkklm (p7store)
 
--- OBRAS
-create table if not exists public.orv_obras (
-  id uuid primary key default gen_random_uuid(),
-  empresa_id uuid,
-  nome text not null,
-  cliente text,
-  localizacao text,
-  responsavel_geral text,
-  data_inicio date,
-  prazo_contratual date,
-  previsao_conclusao date,
-  descricao text,
-  situacao text default 'em_andamento',
-  foto_destaque_url text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  deleted_at timestamptz
-);
+-- OBRAS: reutiliza a tabela compartilhada public.obras (PreciCalc/DiGest/PlanSeven)
+-- Campos relevantes: id, titulo, cliente, endereco, status, empresa_id, responsavel, data_inicio, data_fim
 
 -- PROPOSTAS / FRENTES
 create table if not exists public.orv_propostas (
   id uuid primary key default gen_random_uuid(),
-  obra_id uuid references public.orv_obras(id) on delete cascade,
+  obra_id uuid references public.obras(id) on delete cascade,
   nome text not null,
   descricao text,
   situacao text default 'em_levantamento',
@@ -204,22 +188,7 @@ create table if not exists public.orv_evidencias (
   created_at timestamptz default now()
 );
 
--- EQUIPES
-create table if not exists public.orv_equipes (
-  id uuid primary key default gen_random_uuid(),
-  empresa_id uuid,
-  nome text not null,
-  created_at timestamptz default now()
-);
-
--- RESPONSÁVEIS
-create table if not exists public.orv_responsaveis (
-  id uuid primary key default gen_random_uuid(),
-  empresa_id uuid,
-  nome text not null,
-  funcao text,
-  created_at timestamptz default now()
-);
+-- EQUIPES/RESPONSÁVEIS: reutiliza as tabelas compartilhadas public.equipes e public.funcionarios
 
 -- CALENDARIO
 create table if not exists public.orv_calendario (
@@ -278,8 +247,7 @@ create table if not exists public.orv_valores_campos (
 -- STORAGE BUCKET
 insert into storage.buckets (id, name, public) values ('orvian-evidencias','orvian-evidencias', true) on conflict (id) do nothing;
 
--- RLS: habilitar
-alter table public.orv_obras enable row level security;
+-- RLS: habilitar (public.obras já possui RLS do schema compartilhado)
 alter table public.orv_propostas enable row level security;
 alter table public.orv_servicos enable row level security;
 alter table public.orv_elementos enable row level security;
@@ -292,12 +260,6 @@ alter table public.orv_atividades enable row level security;
 alter table public.orv_evidencias enable row level security;
 
 -- Políticas permissivas iniciais (refinar por empresa depois)
-do $$ begin
-  if not exists (select 1 from pg_policies where tablename='orv_obras' and policyname='orv_obras_all') then
-    create policy orv_obras_all on public.orv_obras for all using (true) with check (true);
-  end if;
-end $$;
-
 -- (replicar para demais tabelas de forma simples)
 create policy if not exists orv_propostas_all on public.orv_propostas for all using (true) with check (true);
 create policy if not exists orv_servicos_all on public.orv_servicos for all using (true) with check (true);

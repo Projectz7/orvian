@@ -8,7 +8,7 @@ export default function DashboardPage() {
   useEffect(() => {
     (async () => {
       const [o, p, s, a, e] = await Promise.all([
-        supabase.from('orv_obras' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
+        supabase.from('obras' as any).select('id', { count: 'exact', head: true }),
         supabase.from('orv_propostas' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
         supabase.from('orv_servicos' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
         supabase.from('orv_atividades' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null),
