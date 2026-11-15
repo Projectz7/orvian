@@ -3,19 +3,19 @@
 App de gestão, execução e acompanhamento de obras (PT-BR). Reutiliza Supabase `pnijzmqygibhwbcnkklm` (p7store); repo GitHub e projeto Vercel `orvian`. Stack: Vite+React+TS+Tailwind+shadcn, Supabase (Auth/DB/Storage), ExcelJS (export com imagens), jsPDF.
 
 ## Etapas
-1. [ ] Scaffold adaptado (auth P7Store, rotas, layout, menu)
-2. [ ] Migration Supabase: obras, propostas, servicos, elementos, modelos_etapas, etapas, controle_execucao, planejamentos, revisoes_planejamento, diarios, atividades, evidencias, usuarios, equipes, responsaveis, calendario, configuracoes, historico_alteracoes, campos_personalizados; RLS; RPCs
-3. [ ] Cadastros dinâmicos (obras, propostas, serviços, elementos, etapas personalizadas, modelos reutilizáveis)
-4. [ ] Lançamento rápido de atividades + atualização automática de progresso
-5. [ ] Diário de obras (organização por dia, geração de texto, versões)
-6. [ ] Controle físico de execução (tabela, cartões, barra, timeline, filtros)
-7. [ ] Cálculo de avanço físico (etapas pesos iguais/personalizados, quantidades, manual justificado; consolidação por peso)
-8. [ ] Planejamento (atividades planejadas, revisões de previsão, vínculos, atrasos, Gantt, previsto vs realizado)
+1. [x] Scaffold adaptado (auth P7Store, rotas, layout, menu)
+2. [x] Migration Supabase: tabelas orv_* criadas + RLS + bucket storage (aplicação manual pendente)
+3. [x] Cadastros dinâmicos (obras, propostas, serviços, elementos, etapas) - modelos reutilizáveis pendente
+4. [x] Lançamento rápido de atividades (atualização automática de progresso pendente)
+5. [x] Diário de obras (organização por dia; geração de texto e versões pendentes)
+6. [x] Controle físico de execução (status por etapa; cartões/barra/timeline pendentes)
+7. [ ] Cálculo de avanço físico (pendente)
+8. [x] Planejamento (atividades planejadas + revisões; Gantt/vínculos pendentes)
 9. [ ] Dashboard geral (indicadores, filtros em cascata, gráficos)
 10. [ ] Apresentação executiva (capa, modos, exportação PDF)
-11. [ ] Histórico fotográfico semanal (dom-sáb, foto principal, galeria)
-12. [ ] Módulo de fotografias/documentos (storage separado, galeria, visualizador)
-13. [ ] Exportação Excel completa (abas de apresentação + bases, imagens incorporadas)
+11. [x] Histórico fotográfico semanal (dom-sáb, upload foto; galeria pendente)
+12. [x] Módulo de fotografias/documentos (storage separado; visualizador pendente)
+13. [x] Exportação Excel completa (abas + bases; imagens incorporadas pendente)
 14. [ ] Exportação PDF
 15. [ ] Integração Power BI (views, dimensões, fatos)
 16. [ ] Usuários e permissões (admin/gestor/colaborador/visualizador, auditoria)
