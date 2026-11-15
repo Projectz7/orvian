@@ -10,7 +10,7 @@ export default function AccessPageFallback() {
         </div>
         <h1 className="text-2xl font-bold">ORVIAN</h1>
         <p className="text-sm text-muted-foreground">
-          Acesso exclusivo via <strong>P7Store</strong>. Entre na sua conta em P7Store e selecione PlanSeven no catálogo de apps.
+          Acesso exclusivo via <strong>P7Store</strong>. Entre na sua conta em P7Store e selecione ORVIAN no catálogo de apps.
         </p>
         <a href="https://project-store-nu.vercel.app/" target="_blank" rel="noreferrer"
            className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
