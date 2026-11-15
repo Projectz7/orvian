@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ObrasService, PropostasService } from '@/lib/orvianService';
-import { Download, Filter, Building2, FileText, Hammer, Users, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2, Clock, Target, PieChart, BarChart3, Layers } from 'lucide-react';
+import { exportarRelatorio, importarRelatorio, type ImportResult } from '@/lib/relatorioService';
+import { Download, Upload, Filter, Building2, FileText, Hammer, Users, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2, Clock, Target, PieChart, BarChart3, Layers, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -55,6 +56,12 @@ export default function ApresentacaoPage() {
   const [propostasDetalhe, setPropostasDetalhe] = useState<PropostaDetalhe[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDetalhe, setLoadingDetalhe] = useState(false);
+
+  // Export/Import
+  const [exportando, setExportando] = useState(false);
+  const [importando, setImportando] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filtros
   const [obraFiltro, setObraFiltro] = useState<string>('todas');
@@ -339,6 +346,41 @@ export default function ApresentacaoPage() {
   const obraSelecionadaInfo = obrasList.find(o => o.id === obraFiltro);
   const propostaSelecionadaInfo = propostasList.find(p => p.id === propostaFiltro);
 
+  const handleExportar = async () => {
+    if (!empresaId) return;
+    setExportando(true);
+    try {
+      await exportarRelatorio({
+        empresaId,
+        obraId: obraFiltro === 'todas' ? null : obraFiltro,
+        propostaId: propostaFiltro === 'todas' ? null : propostaFiltro,
+      });
+    } catch (e: any) {
+      alert('Erro ao exportar: ' + (e.message || e));
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const handleImportar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !empresaId) return;
+    setImportando(true);
+    setImportResult(null);
+    try {
+      const res = await importarRelatorio(file, empresaId);
+      setImportResult(res);
+      // Recarrega dados da página após importação
+      setObraFiltro((v) => v); // trigger re-render via state touch
+      window.location.reload();
+    } catch (err: any) {
+      alert('Erro ao importar: ' + (err.message || err));
+    } finally {
+      setImportando(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -365,10 +407,52 @@ export default function ApresentacaoPage() {
             {' · '}{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" /> Exportar PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImportar}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importando}
+            title="Importar relatório Excel editado e atualizar o app"
+          >
+            {importando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+            {importando ? 'Importando...' : 'Importar Excel'}
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleExportar}
+            disabled={exportando}
+            title="Exportar relatório atual (respeitando filtros) com páginas de apresentação + bases de dados"
+          >
+            {exportando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+            {exportando ? 'Exportando...' : 'Exportar Relatório Excel'}
+          </Button>
+        </div>
       </header>
+
+      {/* Resultado da Importação */}
+      {importResult && (
+        <section className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
+          <div className="font-medium text-emerald-800 mb-2">Relatório importado com sucesso</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div>Abas lidas: <strong>{importResult.sheets.length}</strong></div>
+            <div>Inseridos: <strong>{Object.values(importResult.inserted).reduce((a, b) => a + b, 0)}</strong></div>
+            <div>Atualizados: <strong>{Object.values(importResult.updated).reduce((a, b) => a + b, 0)}</strong></div>
+            <div>Ignorados: <strong>{Object.values(importResult.skipped).reduce((a, b) => a + b, 0)}</strong></div>
+          </div>
+          {importResult.errors.length > 0 && (
+            <div className="mt-2 text-rose-600 text-xs">Erros: {importResult.errors.slice(0, 5).join(' | ')}</div>
+          )}
+        </section>
+      )}
 
       {/* Barra de Filtros */}
       <section className="flex flex-wrap items-center gap-3 p-4 bg-slate-50 rounded-lg border">

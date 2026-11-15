@@ -67,3 +67,8 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 9.3 Tabela detalhada de contratos/propostas quando obra específica selecionada (serviços, elementos, etapas, atividades, execução %)
 - [x] 9.4 KPIs, gráficos e tabela resumo respeitam os filtros aplicados
 - [x] 9.5 Rodapé mostra obra/contrato selecionado
+
+### Etapa 10 — Relatório Excel: exportar modelo + importar de volta
+- [x] 10.1 `src/lib/relatorioService.ts`: `exportarRelatorio()` gera Excel com páginas de apresentação (CAPA, DASHBOARD, APRESENTACAO, PLANEJAMENTO, HISTORICO) + bases de dados (OBRAS, PROPOSTAS, SERVICOS, ELEMENTOS, ETAPAS_MODELO, CONTROLE_EXECUCAO, BASE_PLANEJAMENTO, DIARIO_DIAS, ATIVIDADES, EVIDENCIAS) + GUIA_DADOS, respeitando filtros obra/proposta
+- [x] 10.2 `importarRelatorio()` recebe o Excel editado e atualiza as bases (update por id, insert sem id, resolve FK por nome)
+- [x] 10.3 Botões Exportar/Importar no header da ApresentacaoPage com feedback de resultado
