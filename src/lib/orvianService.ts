@@ -11,8 +11,19 @@ export const ObrasService = {
     if (error) throw error;
     return (data || []) as unknown as Obra[];
   },
-  async create(o: Partial<Obra>): Promise<Obra> {
-    const payload: any = { titulo: o.nome, cliente: o.cliente, endereco: o.localizacao };
+  async create(o: Partial<Obra> & { empresa_id?: string }): Promise<Obra> {
+    const payload: any = {
+      titulo: o.nome,
+      cliente: o.cliente,
+      endereco: o.localizacao,
+      status: o.situacao || 'planejada',
+      responsavel: o.responsavel_geral,
+      data_inicio: o.data_inicio,
+      data_fim: o.previsao_conclusao,
+      empresa_id: o.empresa_id,
+    };
+    // Remove undefined fields
+    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
     const { data, error } = await supabase.from('obras' as any).insert(payload).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
     return data as unknown as Obra;
@@ -23,6 +34,10 @@ export const ObrasService = {
     if (o.cliente !== undefined) payload.cliente = o.cliente;
     if (o.localizacao !== undefined) payload.endereco = o.localizacao;
     if (o.situacao !== undefined) payload.status = o.situacao;
+    if (o.responsavel_geral !== undefined) payload.responsavel = o.responsavel_geral;
+    if (o.data_inicio !== undefined) payload.data_inicio = o.data_inicio;
+    if (o.previsao_conclusao !== undefined) payload.data_fim = o.previsao_conclusao;
+    if (o.descricao !== undefined) payload.descricao = o.descricao;
     const { data, error } = await supabase.from('obras' as any).update(payload).eq('id', id).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
     return data as unknown as Obra;

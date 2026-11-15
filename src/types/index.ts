@@ -161,3 +161,116 @@ export interface Tarefa {
   created_at: string;
   updated_at: string;
 }
+
+// --- Tabelas de apoio / configuração (para tipagem em services) ---
+export interface ModeloEtapa {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  descricao?: string | null;
+  servico_tipo?: string | null;
+  etapas_json: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Configuracao {
+  id: string;
+  empresa_id: string;
+  chave: string;
+  valor: any;
+  descricao?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HistoricoAlteracao {
+  id: string;
+  empresa_id: string;
+  tabela: string;
+  registro_id: string;
+  campo: string;
+  valor_antigo: any;
+  valor_novo: any;
+  usuario_id?: string | null;
+  created_at: string;
+}
+
+export interface CampoPersonalizado {
+  id: string;
+  empresa_id: string;
+  entidade: string;
+  nome: string;
+  tipo: 'text' | 'number' | 'date' | 'boolean' | 'select';
+  opcoes?: string[] | null;
+  obrigatorio?: boolean;
+  created_at: string;
+}
+
+export interface ValorCampo {
+  id: string;
+  empresa_id: string;
+  campo_id: string;
+  entidade: string;
+  registro_id: string;
+  valor: any;
+  created_at: string;
+}
+
+export interface FuncionarioEquipe {
+  funcionario_id: string;
+  equipe_id: string;
+}
+
+export interface ControleExecucao {
+  id: string;
+  etapa_id: string;
+  percentual: number;
+  status: string;
+  responsavel_id?: string | null;
+  observacao?: string | null;
+  data_medicao: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Evidencia {
+  id: string;
+  empresa_id: string;
+  obra_id?: string | null;
+  atividade_id?: string | null;
+  etapa_id?: string | null;
+  url: string;
+  legenda?: string | null;
+  tipo: 'foto' | 'video' | 'documento';
+  uploaded_by?: string | null;
+  created_at: string;
+}
+
+export interface Diario {
+  id: string;
+  empresa_id: string;
+  obra_id: string;
+  data: string;
+  condicao_tempo?: string | null;
+  temperatura_min?: number | null;
+  temperatura_max?: number | null;
+  observacoes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanejamentoCampo {
+  id: string;
+  empresa_id: string;
+  obra_id: string;
+  descricao: string;
+  data_planejada_original: string;
+  data_planejada_atual: string;
+  data_conclusao_real?: string | null;
+  responsavel?: string | null;
+  situacao: string;
+  justificativa_reprogramacao?: string | null;
+  created_at: string;
+  updated_at: string;
+}
