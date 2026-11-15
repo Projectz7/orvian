@@ -275,6 +275,9 @@ create table if not exists public.orv_valores_campos (
   updated_at timestamptz default now()
 );
 
+-- STORAGE BUCKET
+insert into storage.buckets (id, name, public) values ('orvian-evidencias','orvian-evidencias', true) on conflict (id) do nothing;
+
 -- RLS: habilitar
 alter table public.orv_obras enable row level security;
 alter table public.orv_propostas enable row level security;
