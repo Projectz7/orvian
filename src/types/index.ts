@@ -1,99 +1,78 @@
-export type StatusPlano = "rascunho" | "fechado" | "arquivado";
-export type StatusTarefa = "a_fazer" | "fazendo" | "concluida" | "bloqueada" | "cancelada";
-export type Prioridade = "baixa" | "media" | "alta" | "critica";
-
-export interface GoogleCalendarConfig {
-  calendarId: string;           // Google Calendar ID (ex: primary, ou email do calendário)
-  accessToken: string;          // OAuth access token
-  refreshToken: string;         // OAuth refresh token
-  syncEnabled: boolean;         // Se o sync está ativo
-  syncDirection: "bidirectional" | "to_google" | "from_google";
-  lastSync?: string;            // ISO timestamp da última sincronização
-  tokenExpiresAt?: number;      // Unix timestamp expiração do access token
-}
-
-export interface KanbanColumn {
-  id: string;
-  titulo: string;
-  cor: "slate" | "blue" | "emerald" | "amber" | "rose" | "purple" | "orange" | "cyan";
-  fixa: boolean;
-  ordem: number;
-}
-
 export interface Obra {
   id: string;
-  titulo: string | null;
-  cliente: string | null;
-  status: string | null;
-  endereco: string | null;
+  empresa_id?: string | null;
+  nome: string;
+  cliente?: string | null;
+  localizacao?: string | null;
+  responsavel_geral?: string | null;
   data_inicio?: string | null;
-  data_previsao_fim?: string | null;
-  dias_previstos?: number | null;
-  dias_reais?: number | null;
-  valor_total_previsto?: number | null;
-  modalidade?: string | null;
-  created_at?: string;
-}
-
-export interface Funcionario {
-  id: string;
-  nome: string;
-  is_gerente: boolean;
-  ativo: boolean;
-  equipe_id?: string | null;
-  equipe_ids?: string[];
-  telefone?: string | null;
-  custo_diario?: number | null;
-  tipo_contrato?: "CLT" | "PJ" | null;
-}
-
-export interface Equipe {
-  id: string;
-  nome: string;
-  cor?: string | null;
-  empresa_id?: string;
-}
-
-export interface Plano {
-  id: string;
-  empresa_id: string;
-  obra_id: string;
-  nome: string;
-  status: StatusPlano;
-  kanban_cols?: KanbanColumn[];
-  google_calendar_config?: GoogleCalendarConfig | null;
-  criado_por?: string | null;
-  criado_em?: string;
-  fechado_em?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Tarefa {
-  id: string;
-  empresa_id: string;
-  plano_id: string;
-  obra_id: string;
-  parent_id: string | null;
-  titulo: string;
+  prazo_contratual?: string | null;
+  previsao_conclusao?: string | null;
   descricao?: string | null;
-  responsavel_id?: string | null;
-  equipe_id?: string | null;
-  status: StatusTarefa;
-  prioridade: Prioridade;
-  ordem: number;
-  data_inicio: string | null;
-  data_fim: string | null;
-  data_inicio_real: string | null;
-  data_fim_real: string | null;
-  progresso_manual: boolean;
-  progresso: number;
-  peso_tarefa?: number;
-  horas_estimadas?: number | null;
-  observacao?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  // joins opcionais
-  responsavel?: { id: string; nome: string } | null;
-  responsavelNome?: string | null;
+  situacao?: string | null;
+  foto_destaque_url?: string | null;
+  deleted_at?: string | null;
+}
+
+export interface Proposta {
+  id: string;
+  obra_id: string;
+  nome: string;
+  descricao?: string | null;
+  situacao?: string | null;
+}
+
+export interface Servico {
+  id: string;
+  proposta_id: string;
+  nome: string;
+  descricao?: string | null;
+  modelo_acompanhamento?: string | null;
+  unidade_medicao?: string | null;
+  quantidade_prevista?: number | null;
+  peso?: number | null;
+}
+
+export interface Elemento {
+  id: string;
+  servico_id: string;
+  codigo?: string | null;
+  nome: string;
+  descricao?: string | null;
+  quantidade?: number | null;
+}
+
+export interface Etapa {
+  id: string;
+  servico_id: string;
+  elemento_id?: string | null;
+  nome: string;
+  ordem?: number | null;
+  peso?: number | null;
+  unidade_medicao?: string | null;
+  quantidade_prevista?: number | null;
+  dependencia_etapa_id?: string | null;
+  criterio_conclusao?: string | null;
+}
+
+export interface Atividade {
+  id?: string;
+  obra_id?: string | null;
+  proposta_id?: string | null;
+  servico_id?: string | null;
+  elemento_id?: string | null;
+  etapa_id?: string | null;
+  data: string;
+  hora?: string | null;
+  descricao?: string | null;
+  microtarefas?: string | null;
+  quantidade?: number | null;
+  unidade?: string | null;
+  percentual_avanco?: number | null;
+  responsavel?: string | null;
+  equipe?: string | null;
+  situacao?: string | null;
+  ocorrencias?: string | null;
+  observacoes?: string | null;
+  status_etapa?: string | null;
 }
