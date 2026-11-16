@@ -16,9 +16,9 @@ export default function DashboardPage() {
       const inObra = (q: any) => obraIds.length ? q.in('obra_id', obraIds) : q;
       const [p, s, a, e] = await Promise.all([
         inObra(supabase.from('orv_propostas' as any).select('id', { count: 'exact', head: true })),
-        inObra(supabase.from('orv_servicos' as any).select('id', { count: 'exact', head: true })),
-        inObra(supabase.from('orv_atividades' as any).select('id', { count: 'exact', head: true }).is('deleted_at', null)),
-        inObra(supabase.from('orv_etapas' as any).select('id', { count: 'exact', head: true })),
+        supabase.from('orv_servicos' as any).select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId),
+        supabase.from('diario_obra' as any).select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('tipo_registro', 'atividade'),
+        supabase.from('orv_etapas' as any).select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId),
       ]);
       setCounts({ obras: obras.length, propostas: p.count || 0, servicos: s.count || 0, atividades: a.count || 0, etapas: e.count || 0 });
     })();
