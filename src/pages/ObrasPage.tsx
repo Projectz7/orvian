@@ -32,14 +32,14 @@ export default function ObrasPage() {
 
   const openObra = async (o: Obra) => {
     setSelected(o);
-    setPropostas(await PropostasService.listByObra(o.id));
+    setPropostas(await PropostasService.listByObra(o.id, empresaId));
   };
 
   const addProposta = async () => {
     if (!selected || !propNome.trim()) return;
     await PropostasService.create({ obra_id: selected.id, nome: propNome });
     setPropNome('');
-    setPropostas(await PropostasService.listByObra(selected.id));
+    setPropostas(await PropostasService.listByObra(selected.id, empresaId));
   };
 
   return (

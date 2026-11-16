@@ -26,11 +26,14 @@ export default function LancamentoPage() {
   const [responsavel, setResponsavel] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
 
-  useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
-  useEffect(() => { if (servicoId) { ElementosService.listByServico(servicoId).then(setElementos); EtapasService.listByServico(servicoId).then(setEtapas); } else { setElementos([]); setEtapas([]); } }, [servicoId]);
+  useEffect(() => {
+    ObrasService.list(empresaId).then(setObras).catch((e) => setErr('Erro ao carregar obras: ' + (e?.message || e)));
+  }, [empresaId]);
+  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
+  useEffect(() => { if (servicoId) { ElementosService.listByServico(servicoId, empresaId).then(setElementos); EtapasService.listByServico(servicoId, empresaId).then(setEtapas); } else { setElementos([]); setEtapas([]); } }, [servicoId, empresaId]);
 
   const save = async () => {
     setSaving(true); setMsg('');
@@ -88,6 +91,7 @@ export default function LancamentoPage() {
             <Input placeholder="Responsável" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
           </div>
           <Button onClick={save} disabled={saving}>{saving ? 'Salvando...' : 'Registrar'}</Button>
+          {err && <p className="text-sm text-red-600">{err}</p>}
           {msg && <p className="text-sm">{msg}</p>}
         </CardContent>
       </Card>

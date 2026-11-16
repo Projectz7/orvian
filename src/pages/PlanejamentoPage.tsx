@@ -40,8 +40,8 @@ export default function PlanejamentoPage() {
   const [resp, setResp] = useState('');
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
+  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
   useEffect(() => { if (obraId) loadPlans(); }, [obraId, propostaId, servicoId]);
 
   const loadPlans = async () => {

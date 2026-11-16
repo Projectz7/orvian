@@ -32,7 +32,7 @@ export default function HistoricoPage() {
   const [evids, setEvids] = useState<any[]>([]);
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); }, [obraId]);
+  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); }, [obraId, empresaId]);
 
   const days = weekDays(base);
 

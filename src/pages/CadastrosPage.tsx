@@ -23,27 +23,27 @@ export default function CadastrosPage() {
   const [etapaNome, setEtapaNome] = useState('');
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
-  useEffect(() => { if (servicoId) { ElementosService.listByServico(servicoId).then(setElementos); EtapasService.listByServico(servicoId).then(setEtapas); } else { setElementos([]); setEtapas([]); } }, [servicoId]);
+  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
+  useEffect(() => { if (servicoId) { ElementosService.listByServico(servicoId, empresaId).then(setElementos); EtapasService.listByServico(servicoId, empresaId).then(setEtapas); } else { setElementos([]); setEtapas([]); } }, [servicoId, empresaId]);
 
   const addServico = async () => {
     if (!propostaId || !servNome.trim()) return;
     await ServicosService.create({ proposta_id: propostaId, nome: servNome });
     setServNome('');
-    setServicos(await ServicosService.listByProposta(propostaId));
+    setServicos(await ServicosService.listByProposta(propostaId, empresaId));
   };
   const addElemento = async () => {
     if (!servicoId || !elemNome.trim()) return;
     await ElementosService.create({ servico_id: servicoId, nome: elemNome });
     setElemNome('');
-    setElementos(await ElementosService.listByServico(servicoId));
+    setElementos(await ElementosService.listByServico(servicoId, empresaId));
   };
   const addEtapa = async () => {
     if (!servicoId || !etapaNome.trim()) return;
     await EtapasService.create({ servico_id: servicoId, nome: etapaNome, ordem: etapas.length + 1 });
     setEtapaNome('');
-    setEtapas(await EtapasService.listByServico(servicoId));
+    setEtapas(await EtapasService.listByServico(servicoId, empresaId));
   };
 
   return (

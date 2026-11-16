@@ -21,19 +21,19 @@ export default function ControlePage() {
   const [controle, setControle] = useState<Record<string, any>>({});
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId).then(setPropostas); else setPropostas([]); }, [obraId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId).then(setServicos); else setServicos([]); }, [propostaId]);
+  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
   useEffect(() => {
     if (servicoId) {
-      EtapasService.listByServico(servicoId).then(async (ets) => {
+      EtapasService.listByServico(servicoId, empresaId).then(async (ets) => {
         setEtapas(ets);
-        const { data } = await supabase.from('orv_controle_execucao' as any).select('*').in('etapa_id', ets.map(e => e.id));
+        const { data } = await supabase.from('orv_controle_execucao').select('*').in('etapa_id', ets.map(e => e.id));
         const map: Record<string, any> = {};
         (data || []).forEach((c: any) => { map[c.etapa_id] = c; });
         setControle(map);
       });
     } else { setEtapas([]); setControle({}); }
-  }, [servicoId]);
+  }, [servicoId, empresaId]);
 
   const setStatus = async (etapaId: string, status: string) => {
     const existing = controle[etapaId];
