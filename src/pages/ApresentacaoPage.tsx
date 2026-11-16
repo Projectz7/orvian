@@ -100,15 +100,15 @@ export default function ApresentacaoPage() {
         </Card>
       )}
 
-      {semDados && obraId && (
+      {semDados && (
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">
-          Ainda não há lançamentos nesta obra. Os gráficos abaixo já estão preparados e serão preenchidos automaticamente conforme a execução é registrada.
+          {obraId
+            ? 'Ainda não há lançamentos nesta obra. Os gráficos já estão preparados e serão preenchidos automaticamente conforme a execução é registrada.'
+            : 'Selecione uma obra para filtrar. Os gráficos já estão preparados e serão preenchidos automaticamente conforme a execução é registrada.'}
         </p>
       )}
-      {!obraId && <p className="text-muted-foreground text-sm">Selecione uma obra para apresentar.</p>}
 
-      {obraId && (
-        <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Resumo da Execução</CardTitle></CardHeader>
             <CardContent>
@@ -140,8 +140,7 @@ export default function ApresentacaoPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+      </div>
 
       {msg && <p className="text-sm">{msg}</p>}
     </div>
