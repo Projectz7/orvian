@@ -5,7 +5,7 @@ function mapObra(db: any): Obra {
   return {
     id: db.id, empresa_id: db.empresa_id, nome: db.titulo, cliente: db.cliente,
     localizacao: db.endereco, responsavel_geral: db.responsavel, data_inicio: db.data_inicio,
-    previsao_conclusao: db.data_fim, situacao: db.status, descricao: db.descricao,
+    previsao_conclusao: db.data_fim, situacao: db.status,
     cliente_id: db.cliente_id,
   };
 }
@@ -15,7 +15,7 @@ function mapObra(db: any): Obra {
 // ============================================================
 export const ObrasService = {
   async list(empresaId?: string | null): Promise<Obra[]> {
-    let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao');
+    let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at');
     if (empresaId) q = q.eq('empresa_id', empresaId);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
@@ -24,7 +24,7 @@ export const ObrasService = {
   async create(o: Partial<Obra> & { empresa_id?: string }): Promise<Obra> {
     const payload: any = { titulo: o.nome, cliente: o.cliente, endereco: o.localizacao, status: o.situacao || 'planejada', empresa_id: o.empresa_id };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
-    const { data, error } = await supabase.from('obras').insert(payload).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
+    const { data, error } = await supabase.from('obras').insert(payload).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
     return mapObra(data);
   },
@@ -34,7 +34,7 @@ export const ObrasService = {
     if (o.cliente !== undefined) payload.cliente = o.cliente;
     if (o.localizacao !== undefined) payload.endereco = o.localizacao;
     if (o.situacao !== undefined) payload.status = o.situacao;
-    const { data, error } = await supabase.from('obras').update(payload).eq('id', id).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
+    const { data, error } = await supabase.from('obras').update(payload).eq('id', id).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at').single();
     if (error) throw error;
     return mapObra(data);
   },
