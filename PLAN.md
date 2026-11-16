@@ -25,36 +25,36 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 ## Etapas de Correção (Priorizadas por Dependência)
 
 ### Etapa 1 — Tipos TypeScript e Build Zero Erros
-- [ ] 1.1 Adicionar interfaces `Plano`, `Tarefa`, `Equipe`, `Funcionario`, `StatusPlano`, `StatusTarefa` em `src/types/index.ts`
-- [ ] 1.2 Corrigir importações em `ObraPlanoPage.tsx` e `supabaseService.ts`
-- [ ] 1.3 Executar `npm run build` e confirmar zero erros
+- [x] 1.1 Adicionar interfaces `Plano`, `Tarefa`, `Equipe`, `Funcionario`, `StatusPlano`, `StatusTarefa` em `src/types/index.ts`
+- [x] 1.2 Corrigir importações em `ObraPlanoPage.tsx` e `supabaseService.ts`
+- [x] 1.3 Executar `npm run build` e confirmar zero erros
 
 ### Etapa 2 — Migration: FK, empresa_id, Índices, RLS
-- [ ] 2.1 Nova migration corrigindo FK `orv_planejamentos.obra_id` → `public.obras(id)`
-- [ ] 2.2 Adicionar `empresa_id` em todas as tabelas `orv_*` que não têm
-- [ ] 2.3 Adicionar índices compostos (`empresa_id` + FKs)
-- [ ] 2.4 Reescrever RLS policies para multi-tenant (dono via auth.uid, funcionário via `x-empresa-token`)
+- [x] 2.1 Nova migration corrigindo FK `orv_planejamentos.obra_id` → `public.obras(id)`
+- [x] 2.2 Adicionar `empresa_id` em todas as tabelas `orv_*` que não têm
+- [x] 2.3 Adicionar índices compostos (`empresa_id` + FKs)
+- [x] 2.4 Reescrever RLS policies para multi-tenant (dono via auth.uid, funcionário via `x-empresa-token`)
 
 ### Etapa 3 — Storage RLS
-- [ ] 3.1 Policies no bucket `orvian-evidencias` (read/write por empresa via token)
+- [x] 3.1 Policies no bucket `orvian-evidencias` (read/write por empresa via token)
 
 ### Etapa 4 — Auth Hardening
-- [ ] 4.1 Em `AuthContext`: bloquear se `funcionario.ativo === false`
-- [ ] 4.2 Garantir filtro `empresaId` em todas as queries de `ObraPlanoPage` e `supabaseService`
+- [x] 4.1 Em `AuthContext`: bloquear se `funcionario.ativo === false`
+- [x] 4.2 Garantir filtro `empresaId` em todas as queries de `ObraPlanoPage` e `supabaseService`
 
 ### Etapa 5 — Unificar/Clarear Planejamentos
-- [ ] 5.1 Decidir: manter `orv_planejamentos` (campo) OU migrar para `planos`/`plano_tarefas` (gestor)
-- [ ] 5.2 Documentar propósito no README/código; ajustar páginas
+- [x] 5.1 Decisão: ambos coexistem — `orv_planejamentos` (planejamento simples por atividade) e `planos`/`plano_tarefas` (gestor com Kanban/Gantt/Agenda)
+- [x] 5.2 Documentado no código (comentários nos services)
 
 ### Etapa 6 — Types Supabase e Relatórios
 - [ ] 6.1 Rodar `supabase gen-types` e atualizar `src/integrations/supabase/types.ts`
-- [ ] 6.2 Corrigir `RelatoriosPage`: `orv_obras` → `obras`
+- [x] 6.2 Corrigir `RelatoriosPage`: `orv_obras` → `obras`
 - [ ] 6.3 Remover casts `as any` desnecessários
 
 ### Etapa 7 — Páginas Placeholder → Funcionais
-- [ ] 7.1 `CapaPage`: Dashboard resumido + KPIs + atalhos
-- [ ] 7.2 `ApresentacaoPage`: Visão executiva (progresso, custos, cronograma)
-- [ ] 7.3 `ConfiguracoesPage`: Configurações empresa/app
+- [x] 7.1 `CapaPage`: Dashboard resumido + KPIs + atalhos
+- [x] 7.2 `ApresentacaoPage`: Visão executiva (progresso, custos, cronograma)
+- [x] 7.3 `ConfiguracoesPage`: Configurações empresa/app
 
 ### Etapa 8 — Ajustes Finais e Deploy
 - [x] 8.1 Corrigir `ObrasService.create`: `nome` → `titulo`
