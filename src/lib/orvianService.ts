@@ -1,46 +1,30 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Elemento, Etapa, Atividade } from '@/types';
 
-// Helper to map DB fields to interface
 function mapObra(db: any): Obra {
   return {
-    id: db.id,
-    empresa_id: db.empresa_id,
-    nome: db.titulo,
-    cliente: db.cliente,
-    localizacao: db.endereco,
-    responsavel_geral: db.responsavel,
-    data_inicio: db.data_inicio,
-    previsao_conclusao: db.data_fim,
-    situacao: db.status,
-    descricao: db.descricao,
+    id: db.id, empresa_id: db.empresa_id, nome: db.titulo, cliente: db.cliente,
+    localizacao: db.endereco, responsavel_geral: db.responsavel, data_inicio: db.data_inicio,
+    previsao_conclusao: db.data_fim, situacao: db.status, descricao: db.descricao,
+    cliente_id: db.cliente_id,
   };
 }
 
-// Obras reutilizam a tabela compartilhada public.obras (PreciCalc/DiGest/PlanSeven)
-// SEMPRE filtradas pela empresa do usuário logado (dono ou funcionário por token)
+// ============================================================
+// OBRAS — tabela COMPARTILHADA public.obras (PreciCalc/DiGest/PlanSeven)
+// ============================================================
 export const ObrasService = {
   async list(empresaId?: string | null): Promise<Obra[]> {
-    let q = supabase.from('obras').select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao');
+    let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao');
     if (empresaId) q = q.eq('empresa_id', empresaId);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
     return (data || []).map(mapObra);
   },
   async create(o: Partial<Obra> & { empresa_id?: string }): Promise<Obra> {
-    const payload: any = {
-      titulo: o.nome,
-      cliente: o.cliente,
-      endereco: o.localizacao,
-      status: o.situacao || 'planejada',
-      responsavel: o.responsavel_geral,
-      data_inicio: o.data_inicio,
-      data_fim: o.previsao_conclusao,
-      empresa_id: o.empresa_id,
-      descricao: o.descricao,
-    };
+    const payload: any = { titulo: o.nome, cliente: o.cliente, endereco: o.localizacao, status: o.situacao || 'planejada', empresa_id: o.empresa_id };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
-    const { data, error } = await supabase.from('obras').insert(payload).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
+    const { data, error } = await supabase.from('obras').insert(payload).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
     if (error) throw error;
     return mapObra(data);
   },
@@ -50,19 +34,30 @@ export const ObrasService = {
     if (o.cliente !== undefined) payload.cliente = o.cliente;
     if (o.localizacao !== undefined) payload.endereco = o.localizacao;
     if (o.situacao !== undefined) payload.status = o.situacao;
-    if (o.responsavel_geral !== undefined) payload.responsavel = o.responsavel_geral;
-    if (o.data_inicio !== undefined) payload.data_inicio = o.data_inicio;
-    if (o.previsao_conclusao !== undefined) payload.data_fim = o.previsao_conclusao;
-    if (o.descricao !== undefined) payload.descricao = o.descricao;
-    const { data, error } = await supabase.from('obras').update(payload).eq('id', id).select('id, titulo, cliente, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
+    const { data, error } = await supabase.from('obras').update(payload).eq('id', id).select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, descricao').single();
     if (error) throw error;
     return mapObra(data);
   },
-  async remove(_id: string) {
-    throw new Error('Exclusão de obras é gerenciada pelo DiGest/PreciCalc.');
+  async remove(_id: string) { throw new Error('Exclusão de obras é gerenciada pelo DiGest/PreciCalc.'); },
+};
+
+// ============================================================
+// CLIENTES — tabela COMPARTILHADA public.clientes
+// ============================================================
+export const ClientesService = {
+  async list(empresaId?: string | null): Promise<any[]> {
+    let q = supabase.from('clientes').select('id, nome, telefone, email, endereco, empresa_id');
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    const { data, error } = await q.order('nome');
+    if (error) throw error;
+    return data || [];
   },
 };
 
+// ============================================================
+// PROPOSTAS / SERVIÇOS / ELEMENTOS / ETAPAS / CONTROLE
+// (sem equivalente exato nas tabelas compartilhadas — usam orv_*)
+// ============================================================
 export const PropostasService = {
   async listByObra(obraId: string, empresaId?: string | null): Promise<Proposta[]> {
     let q = supabase.from('orv_propostas').select('*').eq('obra_id', obraId).is('deleted_at', null).order('created_at');
@@ -72,18 +67,13 @@ export const PropostasService = {
     return (data || []) as Proposta[];
   },
   async create(p: Partial<Proposta>, empresaId?: string | null): Promise<Proposta> {
-    const payload: any = { ...p };
-    if (empresaId) payload.empresa_id = empresaId;
+    const payload: any = { ...p, ...(empresaId ? { empresa_id: empresaId } : {}) };
     const { data, error } = await supabase.from('orv_propostas').insert(payload).select().single();
     if (error) throw error;
     return data as Proposta;
   },
-  async update(id: string, p: Partial<Proposta>) {
-    await supabase.from('orv_propostas').update({ ...p, updated_at: new Date().toISOString() }).eq('id', id);
-  },
-  async remove(id: string) {
-    await supabase.from('orv_propostas').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  },
+  async update(id: string, p: Partial<Proposta>) { await supabase.from('orv_propostas').update({ ...p, updated_at: new Date().toISOString() }).eq('id', id); },
+  async remove(id: string) { await supabase.from('orv_propostas').update({ deleted_at: new Date().toISOString() }).eq('id', id); },
 };
 
 export const ServicosService = {
@@ -95,18 +85,13 @@ export const ServicosService = {
     return (data || []) as Servico[];
   },
   async create(s: Partial<Servico>, empresaId?: string | null): Promise<Servico> {
-    const payload: any = { ...s };
-    if (empresaId) payload.empresa_id = empresaId;
+    const payload: any = { ...s, ...(empresaId ? { empresa_id: empresaId } : {}) };
     const { data, error } = await supabase.from('orv_servicos').insert(payload).select().single();
     if (error) throw error;
     return data as Servico;
   },
-  async update(id: string, s: Partial<Servico>) {
-    await supabase.from('orv_servicos').update({ ...s, updated_at: new Date().toISOString() }).eq('id', id);
-  },
-  async remove(id: string) {
-    await supabase.from('orv_servicos').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  },
+  async update(id: string, s: Partial<Servico>) { await supabase.from('orv_servicos').update({ ...s, updated_at: new Date().toISOString() }).eq('id', id); },
+  async remove(id: string) { await supabase.from('orv_servicos').update({ deleted_at: new Date().toISOString() }).eq('id', id); },
 };
 
 export const ElementosService = {
@@ -118,8 +103,7 @@ export const ElementosService = {
     return (data || []) as Elemento[];
   },
   async create(e: Partial<Elemento>, empresaId?: string | null): Promise<Elemento> {
-    const payload: any = { ...e };
-    if (empresaId) payload.empresa_id = empresaId;
+    const payload: any = { ...e, ...(empresaId ? { empresa_id: empresaId } : {}) };
     const { data, error } = await supabase.from('orv_elementos').insert(payload).select().single();
     if (error) throw error;
     return data as Elemento;
@@ -135,34 +119,135 @@ export const EtapasService = {
     return (data || []) as Etapa[];
   },
   async create(e: Partial<Etapa>, empresaId?: string | null): Promise<Etapa> {
-    const payload: any = { ...e };
-    if (empresaId) payload.empresa_id = empresaId;
+    const payload: any = { ...e, ...(empresaId ? { empresa_id: empresaId } : {}) };
     const { data, error } = await supabase.from('orv_etapas').insert(payload).select().single();
     if (error) throw error;
     return data as Etapa;
   },
 };
 
+// ============================================================
+// ATIVIDADES — tabela COMPARTILHADA public.diario_obra (tipo_registro='atividade')
+// ============================================================
 export const AtividadesService = {
   async list(limit = 50, empresaId?: string | null): Promise<Atividade[]> {
-    let obraIds: string[] | null = null;
-    if (empresaId) {
-      const obras = await ObrasService.list(empresaId);
-      obraIds = obras.map((o) => o.id);
-      if (obraIds.length === 0) return [];
-    }
-    let q = supabase.from('orv_atividades').select('*').is('deleted_at', null);
-    if (obraIds) q = q.in('obra_id', obraIds);
+    let q = supabase.from('diario_obra').select('*').eq('tipo_registro', 'atividade').is('deleted_at', null);
     if (empresaId) q = q.eq('empresa_id', empresaId);
     const { data, error } = await q.order('data', { ascending: false }).limit(limit);
     if (error) throw error;
-    return (data || []) as Atividade[];
+    return (data || []).map((d: any) => ({
+      id: d.id, obra_id: d.obra_id, proposta_id: d.proposta_id, servico_id: d.servico_id,
+      elemento_id: d.elemento_id, etapa_id: d.etapa_id, data: d.data, hora: d.hora,
+      descricao: d.descricao, microtarefas: d.microtarefas, quantidade: d.quantidade,
+      unidade: d.unidade, percentual_avanco: d.percentual_avanco, responsavel: d.responsaveis,
+      equipe: d.equipe, situacao: d.situacao, ocorrencias: d.ocorrencias,
+      observacoes: d.observacoes_finais, status_etapa: d.status_etapa,
+    }));
   },
   async create(a: Partial<Atividade>, empresaId?: string | null): Promise<Atividade> {
-    const payload: any = { ...a };
-    if (empresaId) payload.empresa_id = empresaId;
-    const { data, error } = await supabase.from('orv_atividades').insert(payload).select().single();
+    const payload: any = {
+      empresa_id: empresaId, obra_id: a.obra_id, proposta_id: a.proposta_id,
+      servico_id: a.servico_id, elemento_id: a.elemento_id, etapa_id: a.etapa_id,
+      data: a.data, hora: a.hora, descricao: a.descricao || '', microtarefas: a.microtarefas,
+      quantidade: a.quantidade, unidade: a.unidade, percentual_avanco: a.percentual_avanco,
+      responsaveis: a.responsavel, equipe: a.equipe, situacao: a.situacao,
+      ocorrencias: a.ocorrencias, observacoes_finais: a.observacoes,
+      status_etapa: a.status_etapa, tipo_registro: 'atividade', descricao: a.descricao || 'Lançamento',
+    };
+    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+    const { data, error } = await supabase.from('diario_obra').insert(payload).select().single();
     if (error) throw error;
     return data as Atividade;
+  },
+};
+
+// ============================================================
+// DIÁRIO — tabela COMPARTILHADA public.diario_obra (tipo_registro='diario')
+// ============================================================
+export const DiariosService = {
+  async list(empresaId?: string | null): Promise<any[]> {
+    let q = supabase.from('diario_obra').select('*').eq('tipo_registro', 'diario').is('deleted_at', null);
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    const { data, error } = await q.order('data', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Diario[];
+  },
+};
+
+// ============================================================
+// PLANEJAMENTO — tabela COMPARTILHADA public.plano_tarefas
+// ============================================================
+export const PlanejamentosService = {
+  async list(empresaId?: string | null, obraId?: string | null): Promise<any[]> {
+    let q = supabase.from('plano_tarefas').select('*').is('deleted_at', null);
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    if (obraId) q = q.eq('obra_id', obraId);
+    const { data, error } = await q.order('data_planejada_original');
+    if (error) throw error;
+    return (data || []) as Planejamento[];
+  },
+  async create(p: any, empresaId?: string | null, obraId?: string | null): Promise<any> {
+    // plano_tarefas exige plano_id — usar/obter um plano padrão da obra
+    let planoId = p.plano_id;
+    if (!planoId) {
+      let { data: plano } = await supabase.from('planos').select('id').eq('obra_id', obraId).eq('empresa_id', empresaId).order('created_at').limit(1).maybeSingle();
+      if (!plano) {
+        const created = await supabase.from('planos').insert({ obra_id: obraId, empresa_id: empresaId, nome: 'Planejamento ORVIAN', status: 'rascunho' }).select('id').single();
+        plano = created.data;
+      }
+      planoId = plano?.id;
+    }
+    const payload: any = {
+      empresa_id: empresaId, obra_id: obraId, plano_id: planoId,
+      titulo: p.descricao || 'Atividade planejada', descricao: p.descricao,
+      proposta_id: p.proposta_id || null, servico_id: p.servico_id || null,
+      data_planejada_original: p.data_planejada_original,
+      data_planejada_atual: p.data_planejada_atual || p.data_planejada_original,
+      data_inicio: p.data_planejada_original, data_fim: p.data_planejada_atual || p.data_planejada_original,
+      responsavel_id: p.responsavel_id || null, status: p.situacao || 'planejado',
+      prioridade: 'media', ordem: 0, progresso: 0,
+    };
+    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+    const { data, error } = await supabase.from('plano_tarefas').insert(payload).select().single();
+    if (error) throw error;
+    return data as Planejamento;
+  },
+  async update(id: string, p: any) {
+    await supabase.from('plano_tarefas').update(p).eq('id', id);
+  },
+  async registrarRevisao(id: string, revisao: any) {
+    const { data } = await supabase.from('plano_tarefas').select('revisoes').eq('id', id).single();
+    const revisoes = [...((data as any)?.revisoes || []), revisao];
+    await supabase.from('plano_tarefas').update({ revisoes, data_planejada_atual: revisao.data_nova, justificativa_reprogramacao: revisao.motivo }).eq('id', id);
+  },
+};
+
+// ============================================================
+// EVIDÊNCIAS — tabela COMPARTILHADA public.pedidos (foto_url)
+// ============================================================
+export const EvidenciasService = {
+  async list(empresaId?: string | null, obraId?: string | null): Promise<any[]> {
+    let q = supabase.from('pedidos').select('*');
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    if (obraId) q = q.eq('obra_id', obraId);
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map((p: any) => ({
+      id: p.id, obra_id: p.obra_id, proposta_id: p.proposta_id, servico_id: p.servico_id,
+      url: p.foto_url || p.foto_finalizacao_url || '', tipo: 'foto', legenda: p.legenda,
+      data: p.data_pedido, principal: p.principal,
+    }));
+  },
+  async create(e: any, empresaId?: string | null): Promise<any> {
+    const payload: any = {
+      empresa_id: empresaId, obra_id: e.obra_id, proposta_id: e.proposta_id,
+      servico_id: e.servico_id, foto_url: e.url, legenda: e.legenda,
+      descricao: e.descricao, principal: e.principal, data_pedido: e.data || new Date().toISOString().slice(0,10),
+      titulo: e.legenda || 'Evidência ORVIAN', status: 'concluido',
+    };
+    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+    const { data, error } = await supabase.from('pedidos').insert(payload).select().single();
+    if (error) throw error;
+    return data as Evidencia;
   },
 };

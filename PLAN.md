@@ -72,3 +72,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 10.1 `src/lib/relatorioService.ts`: `exportarRelatorio()` gera Excel com páginas de apresentação (CAPA, DASHBOARD, APRESENTACAO, PLANEJAMENTO, HISTORICO) + bases de dados (OBRAS, PROPOSTAS, SERVICOS, ELEMENTOS, ETAPAS_MODELO, CONTROLE_EXECUCAO, BASE_PLANEJAMENTO, DIARIO_DIAS, ATIVIDADES, EVIDENCIAS) + GUIA_DADOS, respeitando filtros obra/proposta
 - [x] 10.2 `importarRelatorio()` recebe o Excel editado e atualiza as bases (update por id, insert sem id, resolve FK por nome)
 - [x] 10.3 Botões Exportar/Importar no header da ApresentacaoPage com feedback de resultado
+
+### Etapa 11 — Conectar às tabelas EXISTENTES (auditoria 16/11)
+- [x] 11.1 Migration `20261116_orvian_connect_existing.sql`: adiciona colunas em `diario_obra`, `plano_tarefas`, `pedidos`, `obras`, `clientes`
+- [x] 11.2 `orvianService.ts`: Atividades → `diario_obra`, Planejamentos → `plano_tarefas`, Evidências → `pedidos`, Obras → `obras`, Clientes → `clientes`
+- [x] 11.3 Páginas (Planejamento, Histórico, Diário, Relatórios) reescritas para usar tabelas existentes
+- [ ] 11.4 Remover tabelas `orv_*` redundantes do schema (após validação em produção)

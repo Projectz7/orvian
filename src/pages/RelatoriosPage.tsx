@@ -75,10 +75,10 @@ export default function RelatoriosPage() {
         camposRes,
         valoresRes,
       ] = await Promise.all([
-        inObra(supabase.from('orv_atividades' as any).select('*')),
-        inObra(supabase.from('orv_diarios' as any).select('*')),
-        inObra(supabase.from('orv_planejamentos' as any).select('*')),
-        inObra(supabase.from('orv_evidencias' as any).select('*')),
+        inObra(supabase.from('diario_obra' as any).select('*').eq('tipo_registro', 'atividade')),
+        inObra(supabase.from('diario_obra' as any).select('*').eq('tipo_registro', 'diario')),
+        inObra(supabase.from('plano_tarefas' as any).select('*')),
+        inObra(supabase.from('pedidos' as any).select('*')),
         etapaIds.length > 0
           ? supabase.from('orv_controle_execucao' as any).select('*').in('etapa_id', etapaIds)
           : Promise.resolve({ data: [], error: null }),

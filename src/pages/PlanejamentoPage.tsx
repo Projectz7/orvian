@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService, ServicosService, AtividadesService } from '@/lib/orvianService';
-import { supabase } from '@/integrations/supabase/client';
+import { ObrasService, PropostasService, ServicosService, PlanejamentosService } from '@/lib/orvianService';
 import type { Obra, Proposta, Servico } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,33 +44,34 @@ export default function PlanejamentoPage() {
   useEffect(() => { if (obraId) loadPlans(); }, [obraId, propostaId, servicoId]);
 
   const loadPlans = async () => {
-    let q = supabase.from('orv_planejamentos' as any).select('*').eq('obra_id', obraId);
-    if (propostaId) q = q.eq('proposta_id', propostaId);
-    if (servicoId) q = q.eq('servico_id', servicoId);
-    const { data } = await q.order('data_planejada_original');
-    setPlans((data || []) as Plan[]);
+    const data = await PlanejamentosService.list(empresaId, obraId);
+    const filtrados = data.filter((d: any) => (!propostaId || d.proposta_id === propostaId) && (!servicoId || d.servico_id === servicoId));
+    setPlans(filtrados.map((d: any) => ({
+      id: d.id, descricao: d.titulo || d.descricao, data_planejada_original: d.data_planejada_original,
+      data_planejada_atual: d.data_planejada_atual, data_conclusao_real: d.data_fim_real || null,
+      responsavel: d.responsavel_id || null, situacao: d.status,
+    })));
   };
 
   const add = async () => {
     if (!obraId || !desc.trim() || !dataOrig) return;
-    await supabase.from('orv_planejamentos' as any).insert({
-      empresa_id: empresaId, obra_id: obraId, proposta_id: propostaId || null, servico_id: servicoId || null,
-      descricao: desc, data_planejada_original: dataOrig, data_planejada_atual: dataAtual || dataOrig, responsavel: resp || null, situacao: 'planejado',
-    });
+    await PlanejamentosService.create({
+      descricao: desc, data_planejada_original: dataOrig, data_planejada_atual: dataAtual || dataOrig,
+      responsavel_id: resp || null, situacao: 'planejado', proposta_id: propostaId || null, servico_id: servicoId || null,
+    }, empresaId, obraId);
     setDesc(''); setDataOrig(''); setDataAtual(''); setResp('');
     loadPlans();
   };
 
   const updatePrev = async (p: Plan, nova: string, motivo: string) => {
-    await supabase.from('orv_revisoes_planejamento' as any).insert({
-      planejamento_id: p.id, data_anterior: p.data_planejada_atual, data_nova: nova, motivo, responsavel: 'usuario',
+    await PlanejamentosService.registrarRevisao(p.id, {
+      data_anterior: p.data_planejada_atual, data_nova: nova, motivo, responsavel: 'usuario', data_revisao: new Date().toISOString(),
     });
-    await supabase.from('orv_planejamentos' as any).update({ data_planejada_atual: nova, justificativa_reprogramacao: motivo }).eq('id', p.id);
     loadPlans();
   };
 
   const concluir = async (p: Plan) => {
-    await supabase.from('orv_planejamentos' as any).update({ data_conclusao_real: new Date().toISOString().slice(0,10), situacao: 'concluido' }).eq('id', p.id);
+    await PlanejamentosService.update(p.id, { data_fim_real: new Date().toISOString().slice(0,10), status: 'concluida' });
     loadPlans();
   };
 

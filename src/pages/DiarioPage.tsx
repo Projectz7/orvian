@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AtividadesService } from '@/lib/orvianService';
+import { AtividadesService, DiariosService } from '@/lib/orvianService';
 import type { Atividade } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
@@ -7,10 +7,21 @@ import { useAuth } from '@/context/AuthContext';
 export default function DiarioPage() {
   const { empresaId } = useAuth();
   const [atividades, setAtividades] = useState<Atividade[]>([]);
-  useEffect(() => { AtividadesService.list(200, empresaId).then(setAtividades); }, [empresaId]);
+  const [diarios, setDiarios] = useState<any[]>([]);
+  useEffect(() => {
+    AtividadesService.list(200, empresaId).then(setAtividades);
+    DiariosService.list(empresaId).then(setDiarios);
+  }, [empresaId]);
 
   const grouped: Record<string, Atividade[]> = {};
   atividades.forEach((a) => { (grouped[a.data] = grouped[a.data] || []).push(a); });
+  diarios.forEach((d) => {
+    grouped[d.data] = grouped[d.data] || [];
+    grouped[d.data].push({
+      id: d.id, data: d.data, descricao: d.descricao, responsavel: d.responsaveis,
+      observacoes: d.observacoes_finais, situacao: d.situacao,
+    } as Atividade);
+  });
 
   return (
     <div className="space-y-4">
@@ -28,7 +39,7 @@ export default function DiarioPage() {
           </CardContent>
         </Card>
       ))}
-      {atividades.length === 0 && <p className="text-muted-foreground">Nenhum registro.</p>}
+      {atividades.length === 0 && diarios.length === 0 && <p className="text-muted-foreground">Nenhum registro.</p>}
     </div>
   );
 }
