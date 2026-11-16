@@ -62,10 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resolveEmpresaId = async (email?: string): Promise<string | null> => {
     if (!email) return null;
+    // 1) Dono da empresa (dono_email)
     const { data } = await supabase.from("empresa").select("id").eq("dono_email", email).order('created_at', { ascending: true }).limit(1).maybeSingle();
     if (data) return data.id;
-    const { data: nova } = await supabase.rpc("criar_empresa_com_trial", { p_dono_email: email });
-    if (nova) return nova as string;
+    // 2) Funcionário autenticado via Supabase Auth (login == email)
+    const { data: func } = await supabase.from("funcionarios").select("empresa_id").eq("login", email).eq("ativo", true).limit(1).maybeSingle();
+    if (func?.empresa_id) return func.empresa_id as string;
+    // 3) NÃO criar empresa automaticamente para contas sem vínculo — isso gerava
+    //    empresas vazias e fazia o usuário não ver nenhuma obra.
     return null;
   };
 

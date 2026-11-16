@@ -78,3 +78,10 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 11.2 `orvianService.ts`: Atividades → `diario_obra`, Planejamentos → `plano_tarefas`, Evidências → `pedidos`, Obras → `obras`, Clientes → `clientes`
 - [x] 11.3 Páginas (Planejamento, Histórico, Diário, Relatórios) reescritas para usar tabelas existentes
 - [ ] 11.4 Remover tabelas `orv_*` redundantes do schema (após validação em produção)
+
+### Etapa 12 — Correção de acesso (16/11)
+- [x] 12.1 `get_current_empresa_id()` lê `app.empresa_id` (nome correto gravado por `set_empresa_context`)
+- [x] 12.2 RLS robusto via `get_empresa_id_orv()` (header `x-empresa-token` em toda requisição)
+- [x] 12.3 Tokens `app_id='orvian'` gerados para funcionários ativos
+- [x] 12.4 `resolveEmpresaId` resolve funcionários e não cria empresas vazias
+- [x] 12.5 `AccessPageFallback` redireciona automaticamente para P7Store (`p7store.vercel.app/apps`)
