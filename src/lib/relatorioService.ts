@@ -60,6 +60,8 @@ function sheetToObjects(ws: ExcelJS.Worksheet): Record<string, any>[] {
 // Cabeçalhos oficiais das bases (usados mesmo quando não há registros,
 // para que o usuário possa preencher o Excel e enviar de volta).
 export const COLUNAS_BASES: Record<string, string[]> = {
+  PLANEJAMENTO: ['id', 'obra_id', 'titulo', 'descricao', 'data_planejada_original', 'data_planejada_atual', 'status', 'empresa_id'],
+  HISTORICO: ['id', 'obra_id', 'foto_url', 'legenda', 'descricao', 'data_pedido', 'empresa_id'],
   OBRAS: ['id', 'titulo', 'cliente', 'endereco', 'status', 'empresa_id', 'data_inicio', 'data_fim'],
   PROPOSTAS: ['id', 'obra_id', 'nome', 'descricao', 'situacao', 'empresa_id'],
   SERVICOS: ['id', 'proposta_id', 'nome', 'descricao', 'modelo_acompanhamento', 'unidade_medicao', 'quantidade_prevista', 'peso', 'empresa_id'],
