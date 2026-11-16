@@ -269,16 +269,16 @@ alter table public.orv_evidencias enable row level security;
 
 -- Políticas permissivas iniciais (refinar por empresa depois)
 -- (replicar para demais tabelas de forma simples)
-create policy if not exists orv_propostas_all on public.orv_propostas for all using (true) with check (true);
-create policy if not exists orv_servicos_all on public.orv_servicos for all using (true) with check (true);
-create policy if not exists orv_elementos_all on public.orv_elementos for all using (true) with check (true);
-create policy if not exists orv_etapas_all on public.orv_etapas for all using (true) with check (true);
-create policy if not exists orv_controle_all on public.orv_controle_execucao for all using (true) with check (true);
-create policy if not exists orv_planej_all on public.orv_planejamentos for all using (true) with check (true);
-create policy if not exists orv_revplan_all on public.orv_revisoes_planejamento for all using (true) with check (true);
-create policy if not exists orv_diarios_all on public.orv_diarios for all using (true) with check (true);
-create policy if not exists orv_atividades_all on public.orv_atividades for all using (true) with check (true);
-create policy if not exists orv_evidencias_all on public.orv_evidencias for all using (true) with check (true);
+create policy orv_propostas_all on public.orv_propostas for all using (true) with check (true);
+create policy orv_servicos_all on public.orv_servicos for all using (true) with check (true);
+create policy orv_elementos_all on public.orv_elementos for all using (true) with check (true);
+create policy orv_etapas_all on public.orv_etapas for all using (true) with check (true);
+create policy orv_controle_all on public.orv_controle_execucao for all using (true) with check (true);
+create policy orv_planej_all on public.orv_planejamentos for all using (true) with check (true);
+create policy orv_revplan_all on public.orv_revisoes_planejamento for all using (true) with check (true);
+create policy orv_diarios_all on public.orv_diarios for all using (true) with check (true);
+create policy orv_atividades_all on public.orv_atividades for all using (true) with check (true);
+create policy orv_evidencias_all on public.orv_evidencias for all using (true) with check (true);
 -- ORVIAN - Correção FK, empresa_id, Índices e RLS Multi-tenant
 -- Reutiliza projeto Supabase pnijzmqygibhwbcnkklm (p7store)
 -- Execute APÓS a migration inicial 20261115_orvian_init.sql
@@ -370,36 +370,36 @@ drop policy if exists plano_tarefas_all on public.plano_tarefas;
 
 create policy planos_select on public.planos for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_email = auth.email())
 );
 create policy planos_insert on public.planos for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_email = auth.email())
 );
 create policy planos_update on public.planos for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_email = auth.email())
 );
 create policy planos_delete on public.planos for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = planos.empresa_id and e.dono_email = auth.email())
 );
 
 create policy plano_tarefas_select on public.plano_tarefas for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_email = auth.email())
 );
 create policy plano_tarefas_insert on public.plano_tarefas for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_email = auth.email())
 );
 create policy plano_tarefas_update on public.plano_tarefas for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_email = auth.email())
 );
 create policy plano_tarefas_delete on public.plano_tarefas for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = plano_tarefas.empresa_id and e.dono_email = auth.email())
 );
 
 -- ============================================================
@@ -566,16 +566,16 @@ alter table public.orv_campos_personalizados enable row level security;
 alter table public.orv_valores_campos enable row level security;
 
 -- Remover policies antigas permissivas
-drop policy if exists orv_propostas_all on public.orv_propostas;
-drop policy if exists orv_servicos_all on public.orv_servicos;
-drop policy if exists orv_elementos_all on public.orv_elementos;
-drop policy if exists orv_etapas_all on public.orv_etapas;
-drop policy if exists orv_controle_all on public.orv_controle_execucao;
-drop policy if exists orv_planej_all on public.orv_planejamentos;
-drop policy if exists orv_revplan_all on public.orv_revisoes_planejamento;
-drop policy if exists orv_diarios_all on public.orv_diarios;
-drop policy if exists orv_atividades_all on public.orv_atividades;
-drop policy if exists orv_evidencias_all on public.orv_evidencias;
+create policy orv_propostas_all on public.orv_propostas;
+create policy orv_servicos_all on public.orv_servicos;
+create policy orv_elementos_all on public.orv_elementos;
+create policy orv_etapas_all on public.orv_etapas;
+create policy orv_controle_all on public.orv_controle_execucao;
+create policy orv_planej_all on public.orv_planejamentos;
+create policy orv_revplan_all on public.orv_revisoes_planejamento;
+create policy orv_diarios_all on public.orv_diarios;
+create policy orv_atividades_all on public.orv_atividades;
+create policy orv_evidencias_all on public.orv_evidencias;
 
 -- Policy padrão: empresa_id = get_current_empresa_id() OU user é dono da empresa (auth.uid = empresa.dono_id)
 -- Para dono: auth.uid() = (select dono_id from empresa where id = empresa_id)
@@ -584,263 +584,263 @@ drop policy if exists orv_evidencias_all on public.orv_evidencias;
 -- orv_propostas
 create policy orv_propostas_select on public.orv_propostas for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_propostas_insert on public.orv_propostas for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_propostas_update on public.orv_propostas for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_propostas_delete on public.orv_propostas for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_propostas.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_servicos
 create policy orv_servicos_select on public.orv_servicos for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_servicos_insert on public.orv_servicos for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_servicos_update on public.orv_servicos for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_servicos_delete on public.orv_servicos for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_servicos.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_elementos
 create policy orv_elementos_select on public.orv_elementos for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_elementos_insert on public.orv_elementos for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_elementos_update on public.orv_elementos for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_elementos_delete on public.orv_elementos for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_elementos.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_etapas
 create policy orv_etapas_select on public.orv_etapas for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_etapas_insert on public.orv_etapas for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_etapas_update on public.orv_etapas for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_etapas_delete on public.orv_etapas for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_etapas.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_controle_execucao
 create policy orv_controle_select on public.orv_controle_execucao for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_controle_insert on public.orv_controle_execucao for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_controle_update on public.orv_controle_execucao for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_controle_delete on public.orv_controle_execucao for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_controle_execucao.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_planejamentos
 create policy orv_planej_select on public.orv_planejamentos for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_planej_insert on public.orv_planejamentos for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_planej_update on public.orv_planejamentos for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_planej_delete on public.orv_planejamentos for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_planejamentos.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_revisoes_planejamento
 create policy orv_revplan_select on public.orv_revisoes_planejamento for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_revplan_insert on public.orv_revisoes_planejamento for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_revplan_update on public.orv_revisoes_planejamento for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_revplan_delete on public.orv_revisoes_planejamento for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_revisoes_planejamento.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_diarios
 create policy orv_diarios_select on public.orv_diarios for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_diarios_insert on public.orv_diarios for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_diarios_update on public.orv_diarios for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_diarios_delete on public.orv_diarios for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_diarios.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_atividades
 create policy orv_atividades_select on public.orv_atividades for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_atividades_insert on public.orv_atividades for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_atividades_update on public.orv_atividades for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_atividades_delete on public.orv_atividades for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_atividades.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_evidencias
 create policy orv_evidencias_select on public.orv_evidencias for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_evidencias_insert on public.orv_evidencias for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_evidencias_update on public.orv_evidencias for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_evidencias_delete on public.orv_evidencias for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_evidencias.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_modelos_etapas
 create policy orv_modelos_select on public.orv_modelos_etapas for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_modelos_insert on public.orv_modelos_etapas for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_modelos_update on public.orv_modelos_etapas for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_modelos_delete on public.orv_modelos_etapas for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_modelos_etapas.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_configuracoes
 create policy orv_config_select on public.orv_configuracoes for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_config_insert on public.orv_configuracoes for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_config_update on public.orv_configuracoes for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_config_delete on public.orv_configuracoes for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_configuracoes.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_historico_alteracoes
 create policy orv_historico_select on public.orv_historico_alteracoes for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_historico_alteracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_historico_alteracoes.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_historico_insert on public.orv_historico_alteracoes for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_historico_alteracoes.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_historico_alteracoes.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_campos_personalizados
 create policy orv_campos_select on public.orv_campos_personalizados for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_campos_insert on public.orv_campos_personalizados for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_campos_update on public.orv_campos_personalizados for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_campos_delete on public.orv_campos_personalizados for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_campos_personalizados.empresa_id and e.dono_email = auth.email())
 );
 
 -- orv_valores_campos
 create policy orv_valores_select on public.orv_valores_campos for select using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_valores_insert on public.orv_valores_campos for insert with check (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_valores_update on public.orv_valores_campos for update using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_email = auth.email())
 );
 create policy orv_valores_delete on public.orv_valores_campos for delete using (
   empresa_id = public.get_current_empresa_id()
-  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_id = auth.uid())
+  or exists (select 1 from public.empresa e where e.id = orv_valores_campos.empresa_id and e.dono_email = auth.email())
 );
 
 -- ============================================================
@@ -851,7 +851,7 @@ create policy orv_valores_delete on public.orv_valores_campos for delete using (
 -- Policies baseadas em empresa_id no path ou metadata
 -- Path padrão: {obraId}/{data}/{filename} → extrair obraId e validar empresa
 
-create policy if not exists orvian_evidencias_select on storage.objects for select using (
+create policy orvian_evidencias_select on storage.objects for select using (
   bucket_id = 'orvian-evidencias'
   and (
     -- Dono da empresa
@@ -859,7 +859,7 @@ create policy if not exists orvian_evidencias_select on storage.objects for sele
       select 1 from public.obras o
       join public.empresa e on e.id = o.empresa_id
       where o.id = (split_part(name, '/', 1))::uuid
-        and e.dono_id = auth.uid()
+        and e.dono_email = auth.email()
     )
     or
     -- Funcionário via token (current_setting)
@@ -871,14 +871,14 @@ create policy if not exists orvian_evidencias_select on storage.objects for sele
   )
 );
 
-create policy if not exists orvian_evidencias_insert on storage.objects for insert with check (
+create policy orvian_evidencias_insert on storage.objects for insert with check (
   bucket_id = 'orvian-evidencias'
   and (
     exists (
       select 1 from public.obras o
       join public.empresa e on e.id = o.empresa_id
       where o.id = (split_part(name, '/', 1))::uuid
-        and e.dono_id = auth.uid()
+        and e.dono_email = auth.email()
     )
     or
     exists (
@@ -889,14 +889,14 @@ create policy if not exists orvian_evidencias_insert on storage.objects for inse
   )
 );
 
-create policy if not exists orvian_evidencias_update on storage.objects for update using (
+create policy orvian_evidencias_update on storage.objects for update using (
   bucket_id = 'orvian-evidencias'
   and (
     exists (
       select 1 from public.obras o
       join public.empresa e on e.id = o.empresa_id
       where o.id = (split_part(name, '/', 1))::uuid
-        and e.dono_id = auth.uid()
+        and e.dono_email = auth.email()
     )
     or
     exists (
@@ -907,14 +907,14 @@ create policy if not exists orvian_evidencias_update on storage.objects for upda
   )
 );
 
-create policy if not exists orvian_evidencias_delete on storage.objects for delete using (
+create policy orvian_evidencias_delete on storage.objects for delete using (
   bucket_id = 'orvian-evidencias'
   and (
     exists (
       select 1 from public.obras o
       join public.empresa e on e.id = o.empresa_id
       where o.id = (split_part(name, '/', 1))::uuid
-        and e.dono_id = auth.uid()
+        and e.dono_email = auth.email()
     )
     or
     exists (
