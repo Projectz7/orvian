@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ObrasService, PropostasService, EvidenciasService } from '@/lib/orvianService';
+import { ObrasService, PropostasService, EvidenciasService, AtividadesService } from '@/lib/orvianService';
 import type { Obra, Proposta } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,8 +40,19 @@ export default function HistoricoPage() {
     if (!obraId) return;
     const start = days[0].toISOString().slice(0, 10);
     const end = days[6].toISOString().slice(0, 10);
-    const data = await EvidenciasService.list(empresaId, obraId);
-    setEvids((data || []).filter((e: any) => e.data >= start && e.data <= end));
+    const [evidencias, atividades] = await Promise.all([
+      EvidenciasService.list(empresaId, obraId),
+      AtividadesService.list(500, empresaId),
+    ]);
+    // Fotos lançadas junto com atividades (diario_obra.foto_urls)
+    const fotosAtividades: any[] = [];
+    (atividades || []).filter((a: any) => a.obra_id === obraId).forEach((a: any) => {
+      (a.fotos || []).forEach((url: string) => fotosAtividades.push({
+        id: `${a.id}_${url}`, url, data: a.data, legenda: a.descricao, principal: true,
+      }));
+    });
+    const todas = [...fotosAtividades, ...(evidencias || [])];
+    setEvids(todas.filter((e: any) => e.data >= start && e.data <= end));
   };
   useEffect(() => { loadEvids(); }, [obraId, base]);
 

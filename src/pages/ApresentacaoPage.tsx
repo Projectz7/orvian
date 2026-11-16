@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const CORES = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -18,6 +18,8 @@ export default function ApresentacaoPage() {
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [propostaId, setPropostaId] = useState('');
   const [dados, setDados] = useState({ atividades: 0, diarios: 0, planejados: 0, concluidos: 0 });
+  const [evolucao, setEvolucao] = useState<any[]>([]);
+  const [servicos, setServicos] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -33,6 +35,25 @@ export default function ApresentacaoPage() {
       const { count: diarios } = await supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'diario');
       const { count: planejados } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId);
       const { count: concluidos } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('status', 'concluida');
+
+      // Evolução diária: atividades executadas agrupadas por data
+      const { data: ativs } = await supabase.from('diario_obra' as any).select('data, status_etapa').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
+      const porData: Record<string, number> = {};
+      (ativs || []).forEach((a: any) => { porData[a.data] = (porData[a.data] || 0) + 1; });
+      let acum = 0;
+      const evol = Object.keys(porData).sort().map((d) => ({ data: d.slice(5), executado: (acum += porData[d]), planejado: planejados || 0 }));
+      setEvolucao(evol);
+
+      // Mapa da obra: serviços e a execução de cada um
+      const { data: servs } = await supabase.from('orv_servicos' as any).select('id, nome, proposta_id').eq('empresa_id', empresaId);
+      const { data: ativServ } = await supabase.from('diario_obra' as any).select('servico_id, status_etapa').eq('obra_id', obraId).eq('tipo_registro', 'atividade');
+      const mapa = (servs || []).map((s: any) => {
+        const feitas = (ativServ || []).filter((a: any) => a.servico_id === s.id);
+        const concluidas = feitas.filter((a: any) => a.status_etapa === 'concluida').length;
+        return { nome: s.nome, total: feitas.length, concluidas, progresso: feitas.length ? Math.round((concluidas / feitas.length) * 100) : 0 };
+      });
+      setServicos(mapa);
+
       setDados({ atividades: atividades || 0, diarios: diarios || 0, planejados: planejados || 0, concluidos: concluidos || 0 });
     })();
   }, [obraId, propostaId]);
@@ -141,6 +162,48 @@ export default function ApresentacaoPage() {
             </CardContent>
           </Card>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Evolução: planejado × executado</CardTitle></CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={evolucao.length ? evolucao : [{ data: '—', executado: 0, planejado: 0 }]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="data" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="planejado" stroke="#f59e0b" name="Planejado" />
+                <Line type="monotone" dataKey="executado" stroke="#10b981" name="Executado" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {servicos.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Mapa da Obra — Serviços</CardTitle></CardHeader>
+          <CardContent>
+            <table className="w-full text-sm">
+              <thead><tr className="border-b text-left"><th className="py-2">Serviço</th><th>Atividades</th><th>Concluídas</th><th>Progresso</th></tr></thead>
+              <tbody>
+                {servicos.map((s, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="py-2">{s.nome}</td>
+                    <td>{s.total}</td><td>{s.concluidas}</td>
+                    <td>
+                      <div className="w-full bg-muted rounded h-2"><div className="bg-emerald-500 h-2 rounded" style={{ width: `${s.progresso}%` }} /></div>
+                      <span className="text-xs">{s.progresso}%</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       {msg && <p className="text-sm">{msg}</p>}
     </div>

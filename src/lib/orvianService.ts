@@ -7,7 +7,22 @@ function mapObra(db: any): Obra {
     localizacao: db.endereco, responsavel_geral: db.responsavel, data_inicio: db.data_inicio,
     previsao_conclusao: db.data_fim, situacao: db.status,
     cliente_id: db.cliente_id,
+    projetos: db.projetos || [],
   };
+}
+
+// Serviços da obra vindos de obras.projetos (modelo canônico PreciCalc/DiGest:
+// cada item é { nome, valor }). Convertidos para o formato de serviço do ORVIAN.
+export function servicosDaObra(obra: Obra | null): Servico[] {
+  if (!obra) return [];
+  const projetos = (obra as any).projetos || [];
+  return projetos.map((p: any, i: number) => ({
+    id: `projeto:${obra.id}:${i}`,
+    proposta_id: '',
+    nome: String(p.nome ?? `Serviço ${i + 1}`),
+    descricao: p.valor ? `Valor: ${p.valor}` : null,
+    modelo_acompanhamento: 'simples',
+  }));
 }
 
 // ============================================================
@@ -15,7 +30,7 @@ function mapObra(db: any): Obra {
 // ============================================================
 export const ObrasService = {
   async list(empresaId?: string | null): Promise<Obra[]> {
-    let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at');
+    let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, projetos');
     if (empresaId) q = q.eq('empresa_id', empresaId);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
@@ -142,7 +157,8 @@ export const AtividadesService = {
       unidade: d.unidade, percentual_avanco: d.percentual_avanco, responsavel: d.responsaveis,
       equipe: d.equipe, situacao: d.situacao, ocorrencias: d.ocorrencias,
       observacoes: d.observacoes_finais, status_etapa: d.status_etapa,
-    }));
+      fotos: d.foto_urls || [], tarefa_id: d.tarefa_id,
+    } as Atividade));
   },
   async create(a: Partial<Atividade>, empresaId?: string | null): Promise<Atividade> {
     const payload: any = {
@@ -153,6 +169,8 @@ export const AtividadesService = {
       responsaveis: a.responsavel, equipe: a.equipe, situacao: a.situacao,
       ocorrencias: a.ocorrencias, observacoes_finais: a.observacoes,
       status_etapa: a.status_etapa, tipo_registro: 'atividade', descricao: a.descricao || 'Lançamento',
+      foto_urls: (a as any).fotos?.length ? (a as any).fotos : null,
+      tarefa_id: (a as any).tarefa_id || null,
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
     const { data, error } = await supabase.from('diario_obra').insert(payload).select().single();

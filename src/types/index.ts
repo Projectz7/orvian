@@ -74,6 +74,8 @@ export interface Atividade {
   ocorrencias?: string | null;
   observacoes?: string | null;
   status_etapa?: string | null;
+  fotos?: string[];
+  tarefa_id?: string | null;
 }
 
 // --- Tipos do módulo Planejamento Avançado (planos / plano_tarefas) ---
