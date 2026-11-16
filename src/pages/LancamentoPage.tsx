@@ -29,7 +29,14 @@ export default function LancamentoPage() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    ObrasService.list(empresaId).then(setObras).catch((e) => setErr('Erro ao carregar obras: ' + (e?.message || e)));
+    ObrasService.list(empresaId).then((list) => {
+      setObras(list);
+      // Pré-configura a última obra usada (podendo ser alterada livremente)
+      const chave = 'orvian_ultima_obra';
+      const ultima = localStorage.getItem(chave);
+      if (ultima && list.some((o) => o.id === ultima)) setObraId(ultima);
+      else if (list.length === 1) setObraId(list[0].id);
+    }).catch((e) => setErr('Erro ao carregar obras: ' + (e?.message || e)));
   }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
   useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
@@ -50,6 +57,7 @@ export default function LancamentoPage() {
         responsavel: responsavel || null,
         status_etapa: 'atividade_registrada',
       }, empresaId);
+      if (obraId) localStorage.setItem('orvian_ultima_obra', obraId);
       setMsg('Atividade registrada.');
       setDescricao(''); setQuantidade('');
     } catch (e: any) { setMsg('Erro: ' + (e.message || e)); }

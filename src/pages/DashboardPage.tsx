@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { ObrasService } from '@/lib/orvianService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const CORES = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function DashboardPage() {
   const { empresaId } = useAuth();
@@ -24,6 +27,8 @@ export default function DashboardPage() {
     })();
   }, [empresaId]);
 
+  const barras = Object.entries(counts).map(([nome, valor]) => ({ nome, valor }));
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Dashboard Geral</h1>
@@ -34,6 +39,43 @@ export default function DashboardPage() {
             <CardContent><div className="text-3xl font-bold">{v}</div></CardContent>
           </Card>
         ))}
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Os gráficos abaixo são alimentados automaticamente pelos lançamentos de atividades.
+      </p>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Visão Consolidada</CardTitle></CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barras}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="nome" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="valor" fill="#0ea5e9" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Distribuição</CardTitle></CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={barras} dataKey="valor" nameKey="nome" innerRadius={45} outerRadius={75} label>
+                    {barras.map((_, i) => <Cell key={i} fill={CORES[i % CORES.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

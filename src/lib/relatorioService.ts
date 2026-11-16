@@ -91,11 +91,11 @@ export async function exportarRelatorio(opts: ExportOptions): Promise<void> {
   const [propostasRes, servicosRes, atividadesRes, etapasRes, planejRes, diariosRes, evidenciasRes, controleRes, elementosRes] = await Promise.all([
     obraIds.length ? inObra(supabase.from('orv_propostas' as any).select('*').is('deleted_at', null)) : Promise.resolve({ data: [], error: null }),
     supabase.from('orv_servicos' as any).select('*').is('deleted_at', null),
-    obraIds.length ? inObra(supabase.from('orv_atividades' as any).select('*').is('deleted_at', null)) : Promise.resolve({ data: [], error: null }),
+    obraIds.length ? inObra(supabase.from('diario_obra' as any).select('*').eq('tipo_registro', 'atividade').is('deleted_at', null)) : Promise.resolve({ data: [], error: null }),
     supabase.from('orv_etapas' as any).select('*'),
-    obraIds.length ? inObra(supabase.from('orv_planejamentos' as any).select('*')) : Promise.resolve({ data: [], error: null }),
-    obraIds.length ? inObra(supabase.from('orv_diarios' as any).select('*')) : Promise.resolve({ data: [], error: null }),
-    obraIds.length ? inObra(supabase.from('orv_evidencias' as any).select('*')) : Promise.resolve({ data: [], error: null }),
+    obraIds.length ? inObra(supabase.from('plano_tarefas' as any).select('*')) : Promise.resolve({ data: [], error: null }),
+    obraIds.length ? inObra(supabase.from('diario_obra' as any).select('*').eq('tipo_registro', 'diario').is('deleted_at', null)) : Promise.resolve({ data: [], error: null }),
+    obraIds.length ? inObra(supabase.from('pedidos' as any).select('*')) : Promise.resolve({ data: [], error: null }),
     supabase.from('orv_controle_execucao' as any).select('*'),
     supabase.from('orv_elementos' as any).select('*').is('deleted_at', null),
   ]);
@@ -379,22 +379,33 @@ export async function importarRelatorio(file: File, empresaId: string): Promise<
       try {
         const obraId = row.obra_id || obraByNome.get(String(row.obra || row.Obra || '').toLowerCase());
         if (!obraId) { result.skipped['BASE_PLANEJAMENTO'] = (result.skipped['BASE_PLANEJAMENTO'] || 0) + 1; continue; }
+        let { data: plano } = await supabase.from('planos' as any).select('id').eq('obra_id', obraId).eq('empresa_id', empresaId).limit(1).maybeSingle();
+        if (!plano) {
+          const created = await supabase.from('planos' as any).insert({ obra_id: obraId, empresa_id: empresaId, nome: 'Planejamento ORVIAN', status: 'rascunho' }).select('id').single();
+          plano = created.data;
+        }
         const payload: any = {
           obra_id: obraId,
+          plano_id: plano?.id,
+          titulo: row.descricao || row.Descricao || 'Atividade planejada',
           descricao: row.descricao || row.Descricao,
           data_planejada_original: row.data_planejada_original || new Date().toISOString().slice(0, 10),
           data_planejada_atual: row.data_planejada_atual || row.data_planejada_original || new Date().toISOString().slice(0, 10),
-          data_conclusao_real: row.data_conclusao_real || null,
-          responsavel: row.responsavel ?? null,
-          situacao: row.situacao || 'pendente',
+          data_inicio: row.data_planejada_original || null,
+          data_fim: row.data_planejada_atual || null,
+          data_fim_real: row.data_conclusao_real || null,
+          status: row.situacao || 'planejado',
           justificativa_reprogramacao: row.justificativa_reprogramacao ?? null,
           empresa_id: empresaId,
+          prioridade: 'media',
+          ordem: 0,
+          progresso: 0,
         };
         if (row.id) {
-          await supabase.from('orv_planejamentos' as any).update(payload).eq('id', row.id);
+          await supabase.from('plano_tarefas' as any).update(payload).eq('id', row.id);
           result.updated['BASE_PLANEJAMENTO'] = (result.updated['BASE_PLANEJAMENTO'] || 0) + 1;
         } else {
-          await supabase.from('orv_planejamentos' as any).insert(payload);
+          await supabase.from('plano_tarefas' as any).insert(payload);
           result.inserted['BASE_PLANEJAMENTO'] = (result.inserted['BASE_PLANEJAMENTO'] || 0) + 1;
         }
       } catch (e: any) { result.errors.push(`BASE_PLANEJAMENTO: ${e.message}`); }
@@ -411,17 +422,16 @@ export async function importarRelatorio(file: File, empresaId: string): Promise<
         const payload: any = {
           obra_id: obraId,
           data: row.data || new Date().toISOString().slice(0, 10),
-          condicao_tempo: row.condicao_tempo ?? null,
-          temperatura_min: row.temperatura_min ? Number(row.temperatura_min) : null,
-          temperatura_max: row.temperatura_max ? Number(row.temperatura_max) : null,
-          observacoes: row.observacoes ?? null,
+          descricao: row.observacoes || row.resumo_geral || 'Diário de obra',
+          observacoes_finais: row.observacoes ?? null,
           empresa_id: empresaId,
+          tipo_registro: 'diario',
         };
         if (row.id) {
-          await supabase.from('orv_diarios' as any).update(payload).eq('id', row.id);
+          await supabase.from('diario_obra' as any).update(payload).eq('id', row.id);
           result.updated['DIARIO_DIAS'] = (result.updated['DIARIO_DIAS'] || 0) + 1;
         } else {
-          await supabase.from('orv_diarios' as any).insert(payload);
+          await supabase.from('diario_obra' as any).insert(payload);
           result.inserted['DIARIO_DIAS'] = (result.inserted['DIARIO_DIAS'] || 0) + 1;
         }
       } catch (e: any) { result.errors.push(`DIARIO_DIAS: ${e.message}`); }
@@ -448,18 +458,20 @@ export async function importarRelatorio(file: File, empresaId: string): Promise<
           quantidade: row.quantidade ? Number(row.quantidade) : null,
           unidade: row.unidade ?? null,
           percentual_avanco: row.percentual_avanco ? Number(row.percentual_avanco) : null,
-          responsavel: row.responsavel ?? null,
+          responsaveis: row.responsavel ?? null,
           equipe: row.equipe ?? null,
           situacao: row.situacao ?? null,
           ocorrencias: row.ocorrencias ?? null,
-          observacoes: row.observacoes ?? null,
+          observacoes_finais: row.observacoes ?? null,
           empresa_id: empresaId,
+          tipo_registro: 'atividade',
+          descricao: row.descricao || 'Atividade importada',
         };
         if (row.id) {
-          await supabase.from('orv_atividades' as any).update(payload).eq('id', row.id);
+          await supabase.from('diario_obra' as any).update(payload).eq('id', row.id);
           result.updated['ATIVIDADES'] = (result.updated['ATIVIDADES'] || 0) + 1;
         } else {
-          await supabase.from('orv_atividades' as any).insert(payload);
+          await supabase.from('diario_obra' as any).insert(payload);
           result.inserted['ATIVIDADES'] = (result.inserted['ATIVIDADES'] || 0) + 1;
         }
       } catch (e: any) { result.errors.push(`ATIVIDADES: ${e.message}`); }
