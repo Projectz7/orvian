@@ -29,19 +29,19 @@ export default function CadastrosPage() {
 
   const addServico = async () => {
     if (!propostaId || !servNome.trim()) return;
-    await ServicosService.create({ proposta_id: propostaId, nome: servNome });
+    await ServicosService.create({ proposta_id: propostaId, nome: servNome }, empresaId);
     setServNome('');
     setServicos(await ServicosService.listByProposta(propostaId, empresaId));
   };
   const addElemento = async () => {
     if (!servicoId || !elemNome.trim()) return;
-    await ElementosService.create({ servico_id: servicoId, nome: elemNome });
+    await ElementosService.create({ servico_id: servicoId, nome: elemNome }, empresaId);
     setElemNome('');
     setElementos(await ElementosService.listByServico(servicoId, empresaId));
   };
   const addEtapa = async () => {
     if (!servicoId || !etapaNome.trim()) return;
-    await EtapasService.create({ servico_id: servicoId, nome: etapaNome, ordem: etapas.length + 1 });
+    await EtapasService.create({ servico_id: servicoId, nome: etapaNome, ordem: etapas.length + 1 }, empresaId);
     setEtapaNome('');
     setEtapas(await EtapasService.listByServico(servicoId, empresaId));
   };

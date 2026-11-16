@@ -23,7 +23,7 @@ export default function ObrasPage() {
 
   const addObra = async () => {
     if (!nome.trim()) return;
-    await ObrasService.create({ nome, cliente });
+    await ObrasService.create({ nome, cliente }, empresaId);
     setNome(''); setCliente('');
     load();
   };
@@ -37,7 +37,7 @@ export default function ObrasPage() {
 
   const addProposta = async () => {
     if (!selected || !propNome.trim()) return;
-    await PropostasService.create({ obra_id: selected.id, nome: propNome });
+    await PropostasService.create({ obra_id: selected.id, nome: propNome }, empresaId);
     setPropNome('');
     setPropostas(await PropostasService.listByObra(selected.id, empresaId));
   };

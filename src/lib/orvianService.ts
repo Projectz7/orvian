@@ -71,8 +71,10 @@ export const PropostasService = {
     if (error) throw error;
     return (data || []) as Proposta[];
   },
-  async create(p: Partial<Proposta>): Promise<Proposta> {
-    const { data, error } = await supabase.from('orv_propostas').insert(p).select().single();
+  async create(p: Partial<Proposta>, empresaId?: string | null): Promise<Proposta> {
+    const payload: any = { ...p };
+    if (empresaId) payload.empresa_id = empresaId;
+    const { data, error } = await supabase.from('orv_propostas').insert(payload).select().single();
     if (error) throw error;
     return data as Proposta;
   },
@@ -92,8 +94,10 @@ export const ServicosService = {
     if (error) throw error;
     return (data || []) as Servico[];
   },
-  async create(s: Partial<Servico>): Promise<Servico> {
-    const { data, error } = await supabase.from('orv_servicos').insert(s).select().single();
+  async create(s: Partial<Servico>, empresaId?: string | null): Promise<Servico> {
+    const payload: any = { ...s };
+    if (empresaId) payload.empresa_id = empresaId;
+    const { data, error } = await supabase.from('orv_servicos').insert(payload).select().single();
     if (error) throw error;
     return data as Servico;
   },
@@ -113,8 +117,10 @@ export const ElementosService = {
     if (error) throw error;
     return (data || []) as Elemento[];
   },
-  async create(e: Partial<Elemento>): Promise<Elemento> {
-    const { data, error } = await supabase.from('orv_elementos').insert(e).select().single();
+  async create(e: Partial<Elemento>, empresaId?: string | null): Promise<Elemento> {
+    const payload: any = { ...e };
+    if (empresaId) payload.empresa_id = empresaId;
+    const { data, error } = await supabase.from('orv_elementos').insert(payload).select().single();
     if (error) throw error;
     return data as Elemento;
   },
@@ -128,8 +134,10 @@ export const EtapasService = {
     if (error) throw error;
     return (data || []) as Etapa[];
   },
-  async create(e: Partial<Etapa>): Promise<Etapa> {
-    const { data, error } = await supabase.from('orv_etapas').insert(e).select().single();
+  async create(e: Partial<Etapa>, empresaId?: string | null): Promise<Etapa> {
+    const payload: any = { ...e };
+    if (empresaId) payload.empresa_id = empresaId;
+    const { data, error } = await supabase.from('orv_etapas').insert(payload).select().single();
     if (error) throw error;
     return data as Etapa;
   },
@@ -150,8 +158,10 @@ export const AtividadesService = {
     if (error) throw error;
     return (data || []) as Atividade[];
   },
-  async create(a: Partial<Atividade>): Promise<Atividade> {
-    const { data, error } = await supabase.from('orv_atividades').insert(a).select().single();
+  async create(a: Partial<Atividade>, empresaId?: string | null): Promise<Atividade> {
+    const payload: any = { ...a };
+    if (empresaId) payload.empresa_id = empresaId;
+    const { data, error } = await supabase.from('orv_atividades').insert(payload).select().single();
     if (error) throw error;
     return data as Atividade;
   },

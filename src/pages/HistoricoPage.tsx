@@ -52,7 +52,7 @@ export default function HistoricoPage() {
     if (upErr) { alert('Erro upload: ' + upErr.message); return; }
     const { data: pub } = supabase.storage.from('orvian-evidencias').getPublicUrl(path);
     await supabase.from('orv_evidencias' as any).insert({
-      obra_id: obraId, proposta_id: propostaId || null, tipo: 'foto', url: pub.publicUrl, data: day.toISOString().slice(0,10), principal: true,
+      empresa_id: empresaId, obra_id: obraId, proposta_id: propostaId || null, tipo: 'foto', url: pub.publicUrl, data: day.toISOString().slice(0,10), principal: true,
     });
     loadEvids();
   };

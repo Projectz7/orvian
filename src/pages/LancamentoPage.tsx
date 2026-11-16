@@ -49,7 +49,7 @@ export default function LancamentoPage() {
         quantidade: quantidade ? Number(quantidade) : null,
         responsavel: responsavel || null,
         status_etapa: 'atividade_registrada',
-      });
+      }, empresaId);
       setMsg('Atividade registrada.');
       setDescricao(''); setQuantidade('');
     } catch (e: any) { setMsg('Erro: ' + (e.message || e)); }

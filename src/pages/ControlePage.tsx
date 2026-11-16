@@ -40,7 +40,7 @@ export default function ControlePage() {
     if (existing) {
       await supabase.from('orv_controle_execucao' as any).update({ status, updated_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('orv_controle_execucao' as any).insert({ etapa_id: etapaId, status });
+      await supabase.from('orv_controle_execucao' as any).insert({ empresa_id: empresaId, etapa_id: etapaId, status });
     }
     // reload
     const { data } = await supabase.from('orv_controle_execucao' as any).select('*').in('etapa_id', etapas.map(e => e.id));

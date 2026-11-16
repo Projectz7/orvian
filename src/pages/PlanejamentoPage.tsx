@@ -55,7 +55,7 @@ export default function PlanejamentoPage() {
   const add = async () => {
     if (!obraId || !desc.trim() || !dataOrig) return;
     await supabase.from('orv_planejamentos' as any).insert({
-      obra_id: obraId, proposta_id: propostaId || null, servico_id: servicoId || null,
+      empresa_id: empresaId, obra_id: obraId, proposta_id: propostaId || null, servico_id: servicoId || null,
       descricao: desc, data_planejada_original: dataOrig, data_planejada_atual: dataAtual || dataOrig, responsavel: resp || null, situacao: 'planejado',
     });
     setDesc(''); setDataOrig(''); setDataAtual(''); setResp('');
