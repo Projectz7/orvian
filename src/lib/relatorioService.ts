@@ -57,12 +57,28 @@ function sheetToObjects(ws: ExcelJS.Worksheet): Record<string, any>[] {
     });
 }
 
+// Cabeçalhos oficiais das bases (usados mesmo quando não há registros,
+// para que o usuário possa preencher o Excel e enviar de volta).
+export const COLUNAS_BASES: Record<string, string[]> = {
+  OBRAS: ['id', 'titulo', 'cliente', 'endereco', 'status', 'empresa_id', 'data_inicio', 'data_fim'],
+  PROPOSTAS: ['id', 'obra_id', 'nome', 'descricao', 'situacao', 'empresa_id'],
+  SERVICOS: ['id', 'proposta_id', 'nome', 'descricao', 'modelo_acompanhamento', 'unidade_medicao', 'quantidade_prevista', 'peso', 'empresa_id'],
+  ELEMENTOS: ['id', 'servico_id', 'codigo', 'nome', 'quantidade', 'empresa_id'],
+  ETAPAS_MODELO: ['id', 'servico_id', 'nome', 'ordem', 'peso', 'unidade_medicao', 'quantidade_prevista', 'empresa_id'],
+  CONTROLE_EXECUCAO: ['id', 'etapa_id', 'status', 'data_inicio_real', 'data_conclusao_real', 'previsao', 'responsavel', 'quantidade_executada', 'percentual_avanco', 'empresa_id'],
+  BASE_PLANEJAMENTO: ['id', 'obra_id', 'titulo', 'descricao', 'data_planejada_original', 'data_planejada_atual', 'status', 'empresa_id'],
+  DIARIO_DIAS: ['id', 'obra_id', 'data', 'descricao', 'observacoes_finais', 'empresa_id'],
+  ATIVIDADES: ['id', 'obra_id', 'proposta_id', 'servico_id', 'etapa_id', 'data', 'descricao', 'microtarefas', 'quantidade', 'unidade', 'responsavel', 'ocorrencias', 'observacoes', 'empresa_id'],
+  EVIDENCIAS: ['id', 'obra_id', 'proposta_id', 'foto_url', 'legenda', 'descricao', 'data_pedido', 'empresa_id'],
+};
+
 function fillSheet(ws: ExcelJS.Worksheet, rows: any[], headers?: string[]) {
+  const cols = headers || COLUNAS_BASES[ws.name] || (rows && rows.length > 0 ? Object.keys(rows[0]) : []);
   if (!rows || rows.length === 0) {
-    ws.addRow(['Sem dados']);
+    ws.addRow(cols.length ? cols : ['Sem dados']);
+    ws.getRow(1).font = { bold: true };
     return;
   }
-  const cols = headers || Object.keys(rows[0]);
   ws.addRow(cols);
   // header style
   const hdr = ws.getRow(1);

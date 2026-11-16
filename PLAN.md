@@ -85,3 +85,10 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 12.3 Tokens `app_id='orvian'` gerados para funcionários ativos
 - [x] 12.4 `resolveEmpresaId` resolve funcionários e não cria empresas vazias
 - [x] 12.5 `AccessPageFallback` redireciona automaticamente para P7Store (`p7store.vercel.app/apps`)
+
+### Etapa 13 — Melhorias (17/11)
+- [x] 13.1 Aba Relatórios: baixar relatório Excel completo (apresentação + bases) e enviar editado de volta (`exportarRelatorio`/`importarRelatorio`)
+- [x] 13.2 `relatorioService` usa tabelas existentes (diario_obra, plano_tarefas, pedidos) na exportação e importação
+- [x] 13.3 Dashboard e Apresentação mostram gráficos (Recharts) mesmo sem lançamentos
+- [x] 13.4 Apresentação com botões Baixar/Enviar Excel e filtros Obra/Contrato
+- [x] 13.5 Lançamento pré-configura a última obra usada (localStorage `orvian_ultima_obra`)

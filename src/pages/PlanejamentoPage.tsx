@@ -5,20 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
+import { ExternalLink, CalendarRange } from 'lucide-react';
 
 /**
- * PLANEJAMENTO DE CAMPO (orv_planejamentos)
- * ---------------------------------------
- * Sistema SIMPLES para planejamento de atividades de campo/diário.
- * Tabela: orv_planejamentos (atividades com datas original/atual, responsável, situação)
- * Uso: Engenheiros/ mestres de obra no canteiro para registrar o que foi planejado vs realizado.
- * Diferenciação: Não tem hierarquia, não tem Kanban/Gantt, não tem custos.
- * 
- * PLANEJAMENTO AVANÇADO (ObraPlanoPage - planos/plano_tarefas)
- * -----------------------------------------------------------
- * Sistema RICO para gestão de cronograma, custos e execução.
- * Tabelas: planos + plano_tarefas (hierárquicas, Kanban, Gantt, custos MO, Google Calendar)
- * Uso: Gestores/planejadores para cronograma físico-financeiro completo.
+ * PLANEJAMENTO INTEGRADO COM PLANSEVEN
+ * -----------------------------------
+ * Esta aba usa as MESMAS tabelas do PlanSeven (planos + plano_tarefas).
+ * O que é planejado aqui aparece no PlanSeven e vice-versa.
+ * Para cronograma completo (Kanban/Gantt/Agenda/custos), use o botão
+ * "Abrir no PlanSeven" — a autenticação é feita pelo P7Store.
  */
 
 interface Plan { id: string; descricao: string; data_planejada_original: string; data_planejada_atual: string; data_conclusao_real: string | null; responsavel: string | null; situacao: string; }
@@ -77,7 +72,17 @@ export default function PlanejamentoPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Planejamento</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold">Planejamento</h1>
+        <a href="https://planseven.vercel.app" target="_blank" rel="noreferrer"
+           className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border hover:bg-muted">
+          <CalendarRange className="w-4 h-4" /> Abrir no PlanSeven <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+        Planejamento integrado: as atividades usam as mesmas tabelas do <strong>PlanSeven</strong>.
+        O que você cadastrar aqui aparece lá e vice-versa. Use o botão acima para o cronograma completo (Gantt, Kanban e Agenda).
+      </div>
       <div className="grid md:grid-cols-3 gap-2">
         <select className="border rounded p-2" value={obraId} onChange={(e) => { setObraId(e.target.value); setPropostaId(''); setServicoId(''); }}>
           <option value="">Obra</option>
