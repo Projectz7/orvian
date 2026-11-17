@@ -98,5 +98,11 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 14.2 Lançamento aceita fotos (upload → `diario_obra.foto_urls`), unidade e vínculo com tarefa do planejamento
 - [x] 14.3 Histórico unifica fotos de atividades (`diario_obra`) + evidências (`pedidos`)
 - [x] 14.4 Apresentação: gráfico evolução planejado × executado + Mapa da Obra por serviço
-- [ ] 14.5 Subtarefas hierárquicas no Planejamento (ORVIAN usa tarefas rasas; PlanSeven já tem parent_id/progresso agregado)
-- [ ] 14.6 Sincronização reversa: serviços criados no ORVIAN de volta em `obras.projetos`
+- [x] 14.5 Subtarefas = atividades diárias (diario_obra.tarefa_id) com foto; trigger recalcula progresso da tarefa
+- [x] 14.6 REGRA: só orçamentos APROVADOS no PreciCalc viram serviços (obras.projetos). Rascunhos não são compartilhados. ORVIAN apenas LÊ obras.projetos — NUNCA escreve de volta (removida sincronização reversa que violaria a regra)
+
+### Etapa 15 — Subtarefas diárias (17/11)
+- [x] 15.1 Migration `20261117_orvian_subtarefas_diarias.sql`: trigger recalcula progresso da tarefa mãe ao registrar atividade
+- [x] 15.2 Planejamento: tarefas expansíveis mostrando subtarefas (data, descrição, fotos)
+- [x] 15.3 Botão "Registrar atividade diária" dentro da tarefa (marca como concluída)
+- [x] 15.4 Lançamento: seleção de tarefa do planejamento marca como executada ao registrar

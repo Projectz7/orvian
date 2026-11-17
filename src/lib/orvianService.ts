@@ -11,8 +11,11 @@ function mapObra(db: any): Obra {
   };
 }
 
-// Serviços da obra vindos de obras.projetos (modelo canônico PreciCalc/DiGest:
-// cada item é { nome, valor }). Convertidos para o formato de serviço do ORVIAN.
+// Serviços da obra vindos de obras.projetos — REGRA DO ECOSSISTEMA:
+// obras.projetos é preenchido pelo DiGest APENAS quando o orçamento do PreciCalc
+// é aprovado. Rascunhos/draft/enviado nunca aparecem aqui. O ORVIAN apenas lê;
+// nunca cria serviços a partir de orçamentos não aprovados.
+// Cada item é { nome, valor }. Convertido para o formato de serviço do ORVIAN.
 export function servicosDaObra(obra: Obra | null): Servico[] {
   if (!obra) return [];
   const projetos = (obra as any).projetos || [];

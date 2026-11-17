@@ -69,15 +69,25 @@ export default function PlanejamentoPage() {
     loadPlans();
   };
 
-  const addSubtarefa = async (tarefa: any) => {
-    const descricao = prompt('Descrição da atividade diária executada:');
-    if (!descricao?.trim()) return;
-    const data = prompt('Data (AAAA-MM-DD):', new Date().toISOString().slice(0, 10));
-    if (!data) return;
+  const [subForm, setSubForm] = useState<{ tarefa: any; descricao: string; data: string; fotos: File[] } | null>(null);
+
+  const addSubtarefa = async () => {
+    if (!subForm || !subForm.descricao.trim()) return;
+    const urls: string[] = [];
+    for (const file of subForm.fotos) {
+      const path = `subtarefas/${obraId}/${subForm.data}/${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('orvian-evidencias').upload(path, file, { upsert: true });
+      if (!error) {
+        const { data: pub } = supabase.storage.from('orvian-evidencias').getPublicUrl(path);
+        urls.push(pub.publicUrl);
+      }
+    }
     await AtividadesService.create({
-      obra_id: obraId, proposta_id: tarefa.proposta_id, servico_id: tarefa.servico_id,
-      tarefa_id: tarefa.id, data, descricao, status_etapa: 'concluida',
+      obra_id: obraId, proposta_id: subForm.tarefa.proposta_id, servico_id: subForm.tarefa.servico_id,
+      tarefa_id: subForm.tarefa.id, data: subForm.data, descricao: subForm.descricao,
+      status_etapa: 'concluida', fotos: urls,
     } as Atividade, empresaId);
+    setSubForm(null);
     loadPlans();
   };
 
@@ -154,7 +164,7 @@ export default function PlanejamentoPage() {
                         {s.fotos.length > 0 && <span className="flex items-center gap-1 text-primary"><Camera className="w-3 h-3" />{s.fotos.length}</span>}
                       </div>
                     ))}
-                    <Button size="sm" variant="outline" onClick={() => addSubtarefa(p)}>
+                    <Button size="sm" variant="outline" onClick={() => setSubForm({ tarefa: p, descricao: '', data: new Date().toISOString().slice(0, 10), fotos: [] })}>
                       <Plus className="w-3 h-3 mr-1" /> Registrar atividade diária
                     </Button>
                     <Input type="date" className="w-40" defaultValue={p.data_planejada_atual}
@@ -167,6 +177,29 @@ export default function PlanejamentoPage() {
           {plans.length === 0 && <p className="text-muted-foreground text-sm">Selecione uma obra.</p>}
         </CardContent>
       </Card>
+
+      {subForm && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setSubForm(null)}>
+          <div className="bg-white rounded-lg p-4 w-full max-w-md space-y-3" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-bold">Nova atividade diária</h2>
+            <p className="text-xs text-muted-foreground">Tarefa: {subForm.tarefa.titulo || subForm.tarefa.descricao}</p>
+            <Input placeholder="O que foi executado?" value={subForm.descricao}
+              onChange={(e) => setSubForm({ ...subForm, descricao: e.target.value })} />
+            <Input type="date" value={subForm.data}
+              onChange={(e) => setSubForm({ ...subForm, data: e.target.value })} />
+            <label className="cursor-pointer inline-flex items-center gap-2 text-sm text-primary">
+              <Camera className="w-4 h-4" /> Anexar fotos
+              <input type="file" accept="image/*" multiple className="hidden"
+                onChange={(e) => setSubForm({ ...subForm, fotos: Array.from(e.target.files || []) })} />
+            </label>
+            {subForm.fotos.length > 0 && <p className="text-xs">{subForm.fotos.length} foto(s) selecionada(s)</p>}
+            <div className="flex gap-2">
+              <Button onClick={addSubtarefa}>Registrar</Button>
+              <Button variant="outline" onClick={() => setSubForm(null)}>Cancelar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
