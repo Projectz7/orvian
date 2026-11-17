@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
-import { ExternalLink, CalendarRange, ChevronDown, ChevronRight, Camera, Plus } from 'lucide-react';
+import { ExternalLink, CalendarRange, ChevronDown, ChevronRight, Camera, Plus, GanttChartSquare } from 'lucide-react';
 
 interface Subtarefa { id: string; data: string; descricao: string; fotos: string[]; concluida: boolean; }
 
@@ -26,6 +26,7 @@ export default function PlanejamentoPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [subs, setSubs] = useState<Record<string, Subtarefa[]>>({});
   const [expandido, setExpandido] = useState<Record<string, boolean>>({});
+  const [verGantt, setVerGantt] = useState(false);
 
   const [desc, setDesc] = useState('');
   const [dataOrig, setDataOrig] = useState('');
@@ -95,10 +96,15 @@ export default function PlanejamentoPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Planejamento</h1>
-        <a href="https://planseven.vercel.app" target="_blank" rel="noreferrer"
-           className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border hover:bg-muted">
-          <CalendarRange className="w-4 h-4" /> Abrir no PlanSeven <ExternalLink className="w-3 h-3" />
-        </a>
+        <div className="flex gap-2">
+          <Button size="sm" variant={verGantt ? 'default' : 'outline'} onClick={() => setVerGantt(!verGantt)}>
+            <GanttChartSquare className="w-4 h-4 mr-1" /> Gantt
+          </Button>
+          <a href="https://planseven.vercel.app" target="_blank" rel="noreferrer"
+             className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border hover:bg-muted">
+            <CalendarRange className="w-4 h-4" /> Abrir no PlanSeven <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
       </div>
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
         <strong>Tarefa</strong> = o que foi planejado. <strong>Subtarefa</strong> = cada atividade diária executada (com foto).
@@ -131,6 +137,44 @@ export default function PlanejamentoPage() {
           </div>
         </CardContent>
       </Card>
+
+      {verGantt && (
+        <Card>
+          <CardHeader><CardTitle>Cronograma Gantt</CardTitle></CardHeader>
+          <CardContent>
+            {plans.length === 0 ? <p className="text-sm text-muted-foreground">Sem tarefas para exibir.</p> : (
+              <div className="space-y-2">
+                {(() => {
+                  const datas = plans.flatMap((p) => [p.data_planejada_original, p.data_planejada_atual].filter(Boolean)).sort();
+                  const inicio = datas[0] ? new Date(datas[0]).getTime() : Date.now();
+                  const fim = datas.length > 1 ? new Date(datas[datas.length - 1]).getTime() : inicio + 86400000;
+                  const span = Math.max(fim - inicio, 86400000);
+                  return plans.map((p) => {
+                    const di = p.data_planejada_original ? new Date(p.data_planejada_original).getTime() : inicio;
+                    const df = p.data_planejada_atual ? new Date(p.data_planejada_atual).getTime() : di;
+                    const left = ((di - inicio) / span) * 100;
+                    const width = Math.max(((df - di) / span) * 100, 3);
+                    const prog = p.progresso || 0;
+                    return (
+                      <div key={p.id} className="grid grid-cols-[1fr_3fr] items-center gap-2">
+                        <div className="text-xs truncate">{p.titulo || p.descricao}</div>
+                        <div className="relative h-6 bg-muted rounded">
+                          <div className="absolute h-6 bg-amber-300/60 rounded" style={{ left: `${left}%`, width: `${width}%` }} />
+                          <div className="absolute h-6 bg-emerald-500/70 rounded flex items-center justify-end pr-1"
+                               style={{ left: `${left}%`, width: `${(width * prog) / 100}%` }}>
+                            <span className="text-[10px] text-white">{prog}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">Barra clara = planejado · barra verde = executado</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Tarefas e Subtarefas ({plans.length})</CardTitle></CardHeader>
