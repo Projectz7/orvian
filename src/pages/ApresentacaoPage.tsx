@@ -52,7 +52,8 @@ export default function ApresentacaoPage() {
       const { count: concluidos } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('status', 'concluida');
       AvancoService.obra(obraId).then(setAvancoObra);
 
-      const { data: ativs } = await supabase.from('diario_obra' as any).select('data, status_etapa, descricao, servico_id, fotos').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
+      const { data: ativsRaw } = await supabase.from('diario_obra' as any).select('data, status_etapa, descricao, servico_id, foto_urls').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
+      const ativs = (ativsRaw || []).map((a: any) => ({ ...a, fotos: a.foto_urls || [] }));
       setAtividades(ativs || []);
       const porData: Record<string, number> = {};
       (ativs || []).forEach((a: any) => { porData[a.data] = (porData[a.data] || 0) + 1; });
