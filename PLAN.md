@@ -124,3 +124,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 17.9 Logo/nome da empresa (P7Store) na barra lateral e topbar mobile do app
 - [x] 17.10 Apresentação sem logo (empresas parceiras); tela cheia com abas no topo e conteúdo preenchendo a tela
 - [x] 17.11 Planta: legenda em cards separados (não misturam) + slider de tamanho da marcação (8-60%) + forma/cor/posicionar/excluir por card
+
+### Etapa 18 — Custos do Projeto (17/11)
+- [x] 18.1 Migration `orv_custos` (obra, serviço opcional, natureza, valor mensal, qtd, total) + RLS
+- [x] 18.2 Aba Custos no menu/rota: tabela editável + naturezas padrão do exemplo
+- [x] 18.3 Leitura do custo REAL de `lancamentos_caixa` (DiGest) — somente leitura
+- [x] 18.4 Indicadores Projetado / Investido / Saldo / Resultado + gráfico comparativo por natureza
