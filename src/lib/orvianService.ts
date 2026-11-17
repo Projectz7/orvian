@@ -244,6 +244,19 @@ export const PlanejamentosService = {
 };
 
 // ============================================================
+// EMPRESA — dados da P7Store (logo, nome, cores)
+// ============================================================
+export const EmpresaService = {
+  async get(empresaId?: string | null): Promise<any> {
+    if (!empresaId) return null;
+    const { data } = await supabase.from('empresa' as any)
+      .select('id, nome, subtitle, logo_url, cnpj, endereco, telefone, cor_primaria, cor_secundaria, cor_acento')
+      .eq('id', empresaId).maybeSingle();
+    return data;
+  },
+};
+
+// ============================================================
 // CONFIGURAÇÕES DA APRESENTAÇÃO (capa, legenda, cores)
 // ============================================================
 export const ConfigService = {

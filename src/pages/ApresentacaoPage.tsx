@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ObrasService, PropostasService, AvancoService, ConfigService, servicosDaObra } from '@/lib/orvianService';
+import { ObrasService, PropostasService, AvancoService, ConfigService, EmpresaService, servicosDaObra } from '@/lib/orvianService';
 import { exportarRelatorio, importarRelatorio } from '@/lib/relatorioService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta } from '@/types';
@@ -29,7 +29,8 @@ export default function ApresentacaoPage() {
   const [atividades, setAtividades] = useState<any[]>([]);
   const [avancoObra, setAvancoObra] = useState(0);
   const [capa, setCapa] = useState<{ url: string; legenda: string }>({ url: '', legenda: '' });
-  const [planta, setPlanta] = useState<{ url: string; marcacoes: Marcacao[] }>({ url: '', marcacoes: [] });
+  const [planta, setPlanta] = useState<{ url: string; marcacoes: Marcacao[]; imagens?: string[] }>({ url: '', marcacoes: [], imagens: [] });
+  const [empresa, setEmpresa] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
   const [full, setFull] = useState(false);
@@ -43,6 +44,7 @@ export default function ApresentacaoPage() {
     ConfigService.get(empresaId, `capa_${obraId}`).then((c) => { if (c) setCapa(c); });
     ConfigService.get(empresaId, `planta_${obraId}`).then((p) => { if (p) setPlanta(p); });
   }, [empresaId, obraId]);
+  useEffect(() => { EmpresaService.get(empresaId).then(setEmpresa); }, [empresaId]);
 
   useEffect(() => {
     (async () => {
@@ -90,11 +92,19 @@ export default function ApresentacaoPage() {
       await salvarCapa({ url: pub.publicUrl });
       setMsg('Imagem da capa atualizada.');
     } else {
-      const nova = { ...planta, url: pub.publicUrl };
+      const imagens = [...(planta.imagens || []), pub.publicUrl];
+      const nova = { ...planta, url: pub.publicUrl, imagens };
       setPlanta(nova);
       if (empresaId) await ConfigService.set(empresaId, `planta_${obraId}`, nova);
-      setMsg('Imagem da planta atualizada.');
+      setMsg('Imagem da planta adicionada.');
     }
+  };
+
+  const removerImagemPlanta = async (url: string) => {
+    const imagens = (planta.imagens || []).filter((u) => u !== url);
+    const nova = { ...planta, imagens, url: imagens[imagens.length - 1] || '' };
+    setPlanta(nova);
+    if (empresaId) await ConfigService.set(empresaId, `planta_${obraId}`, nova);
   };
 
   const salvarPlanta = async (marcacoes: Marcacao[]) => {
@@ -177,14 +187,16 @@ export default function ApresentacaoPage() {
               {capa.url ? (
                 <img src={capa.url} alt="Capa" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
-                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${capa.cor}, #0f172a)` }} />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${empresa?.cor_primaria || '#0f172a'}, #0f172a)` }} />
               )}
               <div className="relative z-10 w-full p-6" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,.75))' }}>
                 <div className="text-white">
-                  <div className="text-sm uppercase tracking-widest opacity-80">ORVIAN · Apresentação de Obra</div>
-                  <h2 className="text-3xl font-bold" style={{ borderLeft: '6px solid #0ea5e9', paddingLeft: 12 }}>{obra?.nome}</h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    {empresa?.logo_url && <img src={empresa.logo_url} alt="Logo" className="h-10 w-10 rounded object-contain bg-white/90 p-1" />}
+                    <div className="text-sm uppercase tracking-widest opacity-80">{empresa?.nome || 'ORVIAN'} · Apresentação de Obra</div>
+                  </div>
+                  <h2 className="text-3xl font-bold" style={{ borderLeft: `6px solid ${empresa?.cor_acento || '#0ea5e9'}`, paddingLeft: 12 }}>{obra?.nome}</h2>
                   <p className="opacity-90">{obra?.cliente} · {new Date().toLocaleDateString('pt-BR')}</p>
-                  {capa.legenda && <p className="mt-2 text-sm italic">“{capa.legenda}”</p>}
                 </div>
               </div>
             </div>
@@ -195,9 +207,6 @@ export default function ApresentacaoPage() {
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImagem(f, 'capa'); }} />
                 </label>
               </div>
-              <Textarea placeholder="Legenda da imagem / marcação da obra" value={capa.legenda}
-                onChange={(e) => setCapa({ ...capa, legenda: e.target.value })}
-                onBlur={() => salvarCapa({ legenda: capa.legenda })} />
               <div className="grid grid-cols-3 md:grid-cols-5 gap-3 pt-2">
                 <div><div className="text-2xl font-bold">{dados.atividades}</div><div className="text-xs text-muted-foreground">Atividades</div></div>
                 <div><div className="text-2xl font-bold">{dados.planejados}</div><div className="text-xs text-muted-foreground">Planejadas</div></div>
@@ -213,11 +222,24 @@ export default function ApresentacaoPage() {
         <TabsContent value="planta" className="space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Camera className="w-4 h-4" /> Imagem da planta</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border">
-                <Camera className="w-4 h-4" /> Subir imagem da planta
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImagem(f, 'planta'); }} />
+                <Camera className="w-4 h-4" /> Adicionar imagem da planta
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { Array.from(e.target.files || []).forEach((f) => uploadImagem(f, 'planta')); }} />
               </label>
+              {(planta.imagens || []).length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {(planta.imagens || []).map((url, i) => (
+                    <div key={i} className="relative">
+                      <button onClick={() => { const nova = { ...planta, url }; setPlanta(nova); if (empresaId) ConfigService.set(empresaId, `planta_${obraId}`, nova); }}
+                        className={`w-16 h-16 rounded border-2 overflow-hidden ${planta.url === url ? 'border-primary' : 'border-transparent'}`}>
+                        <img src={url} alt={`Planta ${i+1}`} className="w-full h-full object-cover" />
+                      </button>
+                      <button onClick={() => removerImagemPlanta(url)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
