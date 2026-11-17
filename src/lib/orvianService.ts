@@ -257,6 +257,43 @@ export const EmpresaService = {
 };
 
 // ============================================================
+// CUSTOS — orv_custos (projetado) + lancamentos_caixa (real/DiGest)
+// ============================================================
+export const CustosService = {
+  async list(empresaId: string | null, obraId?: string | null): Promise<any[]> {
+    let q = supabase.from('orv_custos' as any).select('*').is('deleted_at', null).order('natureza');
+    if (empresaId) q = q.eq('empresa_id', empresaId);
+    if (obraId) q = q.eq('obra_id', obraId);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  },
+  async create(c: any, empresaId: string | null): Promise<any> {
+    const { data, error } = await supabase.from('orv_custos' as any)
+      .insert({ ...c, empresa_id: empresaId }).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async update(id: string, c: any) {
+    await supabase.from('orv_custos' as any).update({ ...c, updated_at: new Date().toISOString() }).eq('id', id);
+  },
+  async remove(id: string) {
+    await supabase.from('orv_custos' as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  },
+  // Custo REAL (saídas) lido do DiGest — só leitura, nunca grava
+  async reais(empresaId: string | null, obraId: string): Promise<any[]> {
+    const { data, error } = await supabase.from('lancamentos_caixa' as any)
+      .select('id, data, categoria, descricao, valor, servico')
+      .eq('obra_id', obraId).eq('bpo_only', false).lt('valor', 0);
+    if (error) throw error;
+    return (data || []).map((l: any) => ({
+      id: l.id, data: l.data, natureza: l.categoria || 'Outros',
+      descricao: l.descricao, valor: Math.abs(Number(l.valor || 0)), servico: l.servico,
+    }));
+  },
+};
+
+// ============================================================
 // CONFIGURAÇÕES DA APRESENTAÇÃO (capa, legenda, cores)
 // ============================================================
 export const ConfigService = {
