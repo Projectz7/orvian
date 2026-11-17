@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Plus, Trash2, Move, Maximize2, X } from 'lucide-react';
+import { Palette, Plus, Trash2, Move, Maximize2, X, Square, Circle, Triangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -7,8 +7,9 @@ export type Marcacao = {
   id: string;
   nome: string;
   cor: string;
-  x: number;   // % na imagem
-  y: number;   // % na imagem
+  x: number;
+  y: number;
+  tamanho: number;       // porcentagem da imagem (10-60)
   forma: 'retangulo' | 'circulo' | 'triangulo';
 };
 
@@ -16,66 +17,62 @@ export const CORES_MARCA = ['#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#8b5cf6
 const FORMAS: Marcacao['forma'][] = ['retangulo', 'circulo', 'triangulo'];
 
 function shapeStyle(m: Marcacao): React.CSSProperties {
+  const size = m.tamanho || 20;
   const base: React.CSSProperties = {
     position: 'absolute', left: `${m.x}%`, top: `${m.y}%`,
-    background: m.cor, opacity: 0.4, transform: 'translate(-50%, -50%)',
+    transform: 'translate(-50%, -50%)', border: '2px solid rgba(255,255,255,.8)',
+    cursor: 'pointer',
   };
-  if (m.forma === 'circulo') return { ...base, width: 90, height: 90, borderRadius: '50%' };
-  if (m.forma === 'triangulo') return { ...base, width: 0, height: 0, background: 'transparent',
-    borderLeft: '50px solid transparent', borderRight: '50px solid transparent', borderBottom: `90px solid ${m.cor}` };
-  return { ...base, width: 130, height: 80, borderRadius: 6 };
+  if (m.forma === 'circulo') return { ...base, width: `${size}%`, aspectRatio: '1', borderRadius: '50%', background: m.cor, opacity: 0.4 };
+  if (m.forma === 'triangulo') return {
+    ...base, width: 0, height: 0, background: 'transparent', border: 'none',
+    borderLeft: `${size / 2}% solid transparent`, borderRight: `${size / 2}% solid transparent`,
+    borderBottom: `${size}% solid ${m.cor}`, opacity: 0.4,
+  };
+  return { ...base, width: `${size}%`, height: `${size * 0.6}%`, borderRadius: 6, background: m.cor, opacity: 0.4 };
 }
 
 interface Props {
   imagem: string;
   marcacoes: Marcacao[];
   onChange: (m: Marcacao[]) => void;
-  expanded?: boolean;
 }
 
-export default function PlantaMarcacoes({ imagem, marcacoes, onChange, expanded = false }: Props) {
+export default function PlantaMarcacoes({ imagem, marcacoes, onChange }: Props) {
   const [nome, setNome] = useState('');
   const [cor, setCor] = useState(CORES_MARCA[0]);
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [modoPosicionar, setModoPosicionar] = useState(false);
   const [full, setFull] = useState(false);
 
+  const atualizar = (id: string, patch: Partial<Marcacao>) =>
+    onChange(marcacoes.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+
   const add = () => {
     if (!nome.trim()) return;
-    const m: Marcacao = {
-      id: Date.now().toString(), nome: nome.trim(), cor, x: 50, y: 50, forma: 'retangulo',
-    };
+    const m: Marcacao = { id: Date.now().toString(), nome: nome.trim(), cor, x: 50, y: 50, tamanho: 20, forma: 'retangulo' };
     onChange([...marcacoes, m]);
     setNome(''); setSelecionada(m.id); setModoPosicionar(true);
   };
 
   const ciclarCor = (id: string) => {
-    onChange(marcacoes.map((m) => {
-      if (m.id !== id) return m;
-      const i = CORES_MARCA.indexOf(m.cor);
-      return { ...m, cor: CORES_MARCA[(i + 1) % CORES_MARCA.length] };
-    }));
+    const m = marcacoes.find((x) => x.id === id);
+    if (!m) return;
+    atualizar(id, { cor: CORES_MARCA[(CORES_MARCA.indexOf(m.cor) + 1) % CORES_MARCA.length] });
   };
 
   const clicarImagem = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!modoPosicionar || !selecionada) return;
     const r = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    onChange(marcacoes.map((m) => m.id === selecionada ? { ...m, x, y } : m));
+    atualizar(selecionada, {
+      x: ((e.clientX - r.left) / r.width) * 100,
+      y: ((e.clientY - r.top) / r.height) * 100,
+    });
     setModoPosicionar(false);
   };
 
-  const trocarForma = (id: string) => {
-    onChange(marcacoes.map((m) => {
-      if (m.id !== id) return m;
-      const i = FORMAS.indexOf(m.forma);
-      return { ...m, forma: FORMAS[(i + 1) % FORMAS.length] };
-    }));
-  };
-
   const area = (
-    <div className={`relative w-full ${expanded || full ? 'h-full' : 'h-96'} bg-slate-100 rounded overflow-hidden`} onClick={clicarImagem}>
+    <div className={`relative w-full bg-slate-100 rounded overflow-hidden ${full ? 'h-full' : 'h-96'}`} onClick={clicarImagem}>
       {imagem ? (
         <img src={imagem} alt="Planta" className="absolute inset-0 w-full h-full object-contain" />
       ) : (
@@ -90,32 +87,61 @@ export default function PlantaMarcacoes({ imagem, marcacoes, onChange, expanded 
     </div>
   );
 
+  const legenda = (m: Marcacao) => (
+    <div key={m.id} className={`rounded border p-3 space-y-2 ${selecionada === m.id ? 'border-primary bg-primary/5' : ''}`}>
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={() => ciclarCor(m.id)} className="flex items-center gap-2 min-w-0" title="Clique para mudar a cor">
+          <span className="w-6 h-6 rounded shrink-0" style={{ background: m.cor, opacity: 0.4 }} />
+          <span className="text-sm font-medium truncate">{m.nome}</span>
+        </button>
+        <button onClick={() => onChange(marcacoes.filter((x) => x.id !== m.id))} title="Excluir" className="text-destructive p-1 shrink-0">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="flex items-center gap-1 flex-wrap">
+        <button onClick={() => atualizar(m.id, { forma: 'retangulo' })} title="Retângulo"
+          className={`p-1.5 rounded border ${m.forma === 'retangulo' ? 'bg-primary text-white' : ''}`}><Square className="w-3 h-3" /></button>
+        <button onClick={() => atualizar(m.id, { forma: 'circulo' })} title="Círculo"
+          className={`p-1.5 rounded border ${m.forma === 'circulo' ? 'bg-primary text-white' : ''}`}><Circle className="w-3 h-3" /></button>
+        <button onClick={() => atualizar(m.id, { forma: 'triangulo' })} title="Triângulo"
+          className={`p-1.5 rounded border ${m.forma === 'triangulo' ? 'bg-primary text-white' : ''}`}><Triangle className="w-3 h-3" /></button>
+        <button onClick={() => { setSelecionada(m.id); setModoPosicionar(true); }} title="Posicionar na imagem"
+          className={`p-1.5 rounded border ${modoPosicionar && selecionada === m.id ? 'bg-primary text-white' : ''}`}><Move className="w-3 h-3" /></button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">Tamanho</span>
+        <input type="range" min="8" max="60" value={m.tamanho || 20}
+          onChange={(e) => atualizar(m.id, { tamanho: Number(e.target.value) })}
+          className="flex-1" />
+        <span className="text-xs w-8 text-right">{m.tamanho || 20}%</span>
+      </div>
+      <div className="flex items-center gap-1">
+        {CORES_MARCA.map((c) => (
+          <button key={c} onClick={() => atualizar(m.id, { cor: c })} title="Cor"
+            className={`w-5 h-5 rounded-full border ${m.cor === c ? 'ring-2 ring-primary' : ''}`} style={{ background: c }} />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className={`space-y-3 ${full ? 'fixed inset-0 z-[60] bg-slate-900 p-4 overflow-auto' : ''}`}>
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className={`font-bold ${full ? 'text-white' : ''}`}>Planta — marcações</h2>
+        <h2 className="font-bold">Planta — marcações</h2>
         <Button size="sm" variant="outline" onClick={() => setFull(!full)}>
           {full ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </Button>
       </div>
 
       {full ? (
-        <div className="grid grid-cols-[3fr_1fr] gap-4 h-[calc(100vh-80px)]">
-          <div className="bg-white rounded overflow-hidden">{area}</div>
-          <div className="space-y-2 overflow-auto">
-            {marcacoes.map((m) => (
-              <button key={m.id} onClick={() => ciclarCor(m.id)}
-                className="w-full flex items-center gap-2 p-2 rounded border bg-white text-left">
-                <span className="w-5 h-5 rounded" style={{ background: m.cor, opacity: 0.4 }} />
-                <span className="text-sm">{m.nome}</span>
-              </button>
-            ))}
-          </div>
+        <div className="fixed inset-0 z-[60] bg-white p-4 grid grid-cols-[3fr_1fr] gap-4">
+          <div className="rounded overflow-hidden">{area}</div>
+          <div className="space-y-2 overflow-auto">{marcacoes.map(legenda)}</div>
         </div>
       ) : (
         <>
           {area}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <Input placeholder="Nome da marcação" value={nome} onChange={(e) => setNome(e.target.value)} className="max-w-xs" />
             <div className="flex items-center gap-1">
               {CORES_MARCA.map((c) => (
@@ -125,19 +151,7 @@ export default function PlantaMarcacoes({ imagem, marcacoes, onChange, expanded 
             </div>
             <Button onClick={add}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {marcacoes.map((m) => (
-              <div key={m.id} className={`flex items-center gap-2 p-2 rounded border ${selecionada === m.id ? 'border-primary' : ''}`}>
-                <button onClick={() => ciclarCor(m.id)} className="flex items-center gap-2" title="Clicar para mudar a cor">
-                  <span className="w-6 h-6 rounded" style={{ background: m.cor, opacity: 0.4 }} />
-                  <span className="text-sm">{m.nome}</span>
-                </button>
-                <button onClick={() => trocarForma(m.id)} title="Mudar forma"><Move className="w-3 h-3" /></button>
-                <button onClick={() => setSelecionada(m.id)} title="Posicionar"><Palette className="w-3 h-3" /></button>
-                <button onClick={() => onChange(marcacoes.filter((x) => x.id !== m.id))} title="Remover"><Trash2 className="w-3 h-3 text-destructive" /></button>
-              </div>
-            ))}
-          </div>
+          <div className="grid md:grid-cols-2 gap-3">{marcacoes.map(legenda)}</div>
         </>
       )}
     </div>
