@@ -92,3 +92,11 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 13.3 Dashboard e Apresentação mostram gráficos (Recharts) mesmo sem lançamentos
 - [x] 13.4 Apresentação com botões Baixar/Enviar Excel e filtros Obra/Contrato
 - [x] 13.5 Lançamento pré-configura a última obra usada (localStorage `orvian_ultima_obra`)
+
+### Etapa 14 — Modelo correto serviço/obra + evolução (17/11)
+- [x] 14.1 Serviço no lançamento vem de `obras.projetos` (modelo canônico PreciCalc/DiGest), sem exigir "Proposta"
+- [x] 14.2 Lançamento aceita fotos (upload → `diario_obra.foto_urls`), unidade e vínculo com tarefa do planejamento
+- [x] 14.3 Histórico unifica fotos de atividades (`diario_obra`) + evidências (`pedidos`)
+- [x] 14.4 Apresentação: gráfico evolução planejado × executado + Mapa da Obra por serviço
+- [ ] 14.5 Subtarefas hierárquicas no Planejamento (ORVIAN usa tarefas rasas; PlanSeven já tem parent_id/progresso agregado)
+- [ ] 14.6 Sincronização reversa: serviços criados no ORVIAN de volta em `obras.projetos`
