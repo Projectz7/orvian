@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Home, BarChart3, Presentation, CalendarDays, Image, PlusCircle, BookOpen, CheckSquare, Building2, Settings, FileDown, Cog, Menu, X } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { EmpresaService } from "@/lib/orvianService";
 
 const menu = [
   { to: "/", label: "Início", icon: Home, short: "Início" },
@@ -16,6 +18,25 @@ const menu = [
   { to: "/relatorios", label: "Relatórios", icon: FileDown, short: "Relat." },
   { to: "/configuracoes", label: "Configurações", icon: Cog, short: "Config." },
 ];
+
+function Brand() {
+  const { empresaId } = useAuth();
+  const [empresa, setEmpresa] = useState<any>(null);
+  useEffect(() => { EmpresaService.get(empresaId).then(setEmpresa); }, [empresaId]);
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      {empresa?.logo_url ? (
+        <img src={empresa.logo_url} alt="Logo" className="h-9 w-9 rounded-lg object-contain bg-white shrink-0" />
+      ) : (
+        <div className="h-9 w-9 rounded-lg bg-primary shrink-0" />
+      )}
+      <div className="min-w-0">
+        <div className="font-bold leading-tight truncate">{empresa?.nome || 'ORVIAN'}</div>
+        <div className="text-[10px] opacity-60 truncate">{empresa?.subtitle || 'Gestão de Obras'}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function Layout() {
   const loc = useLocation();
@@ -33,23 +54,20 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 md:flex-row">
-      {/* Topbar mobile */}
       <header className="md:hidden sticky top-0 z-30 bg-slate-900 text-white flex items-center justify-between px-3 py-2">
-        <span className="font-bold">ORVIAN</span>
+        <Brand />
         <button onClick={() => setOpen(!open)} aria-label="Menu" className="p-2">
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </header>
 
-      {/* Sidebar desktop */}
       <aside className="hidden md:block w-56 shrink-0 bg-slate-900 text-white p-4">
-        <h1 className="text-xl font-bold mb-6">ORVIAN</h1>
+        <div className="mb-6"><Brand /></div>
         <nav className="space-y-1">
           {menu.map((m) => <NavItem key={m.to} m={m} />)}
         </nav>
       </aside>
 
-      {/* Drawer mobile */}
       {open && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
@@ -63,7 +81,6 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* Bottom nav mobile (principais) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900 text-white flex justify-around py-1.5">
         {menu.filter(m => ["/", "/lancamento", "/controle", "/historico", "/dashboard"].includes(m.to)).map((m) => {
           const Icon = m.icon;

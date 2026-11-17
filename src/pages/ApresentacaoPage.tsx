@@ -140,7 +140,7 @@ export default function ApresentacaoPage() {
   ];
 
   return (
-    <div ref={rootRef} className={`space-y-4 ${full ? 'bg-slate-900 p-6 text-white' : ''}`}>
+    <div ref={rootRef} className={`${full ? 'h-screen flex flex-col overflow-auto bg-slate-900 p-6 text-white' : 'space-y-4'}`}>
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Apresentação Executiva</h1>
         <div className="flex gap-2 flex-wrap">
@@ -171,7 +171,7 @@ export default function ApresentacaoPage() {
       {!obraId && <p className="text-muted-foreground text-sm">Selecione uma obra para apresentar.</p>}
 
       {obraId && (
-      <Tabs defaultValue="capa">
+      <Tabs defaultValue="capa" className={full ? 'flex-1 flex flex-col min-h-0' : ''}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="capa">Capa</TabsTrigger>
           <TabsTrigger value="planta">Planta</TabsTrigger>
@@ -181,7 +181,7 @@ export default function ApresentacaoPage() {
         </TabsList>
 
         {/* CAPA */}
-        <TabsContent value="capa">
+        <TabsContent value="capa" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
           <Card>
             <div className="relative h-80 rounded-t-lg overflow-hidden flex items-end">
               {capa.url ? (
@@ -191,9 +191,8 @@ export default function ApresentacaoPage() {
               )}
               <div className="relative z-10 w-full p-6" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,.75))' }}>
                 <div className="text-white">
-                  <div className="flex items-center gap-3 mb-2">
-                    {empresa?.logo_url && <img src={empresa.logo_url} alt="Logo" className="h-10 w-10 rounded object-contain bg-white/90 p-1" />}
-                    <div className="text-sm uppercase tracking-widest opacity-80">{empresa?.nome || 'ORVIAN'} · Apresentação de Obra</div>
+                  <div className="text-sm uppercase tracking-widest opacity-80">
+                    {empresa?.nome || 'ORVIAN'} · Apresentação de Obra
                   </div>
                   <h2 className="text-3xl font-bold" style={{ borderLeft: `6px solid ${empresa?.cor_acento || '#0ea5e9'}`, paddingLeft: 12 }}>{obra?.nome}</h2>
                   <p className="opacity-90">{obra?.cliente} · {new Date().toLocaleDateString('pt-BR')}</p>
@@ -219,7 +218,7 @@ export default function ApresentacaoPage() {
         </TabsContent>
 
         {/* PLANTA */}
-        <TabsContent value="planta" className="space-y-4">
+        <TabsContent value="planta" className={`space-y-4 ${full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}`}>
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Camera className="w-4 h-4" /> Imagem da planta</CardTitle></CardHeader>
             <CardContent className="space-y-3">
@@ -254,7 +253,7 @@ export default function ApresentacaoPage() {
         </TabsContent>
 
         {/* EXECUÇÃO */}
-        <TabsContent value="execucao" className="space-y-4">
+        <TabsContent value="execucao" className={`space-y-4 ${full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}`}>
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Evolução planejado × executado</CardTitle></CardHeader>
             <CardContent>
@@ -298,7 +297,7 @@ export default function ApresentacaoPage() {
         </TabsContent>
 
         {/* DASHBOARD */}
-        <TabsContent value="dashboard">
+        <TabsContent value="dashboard" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-base">Resumo da execução</CardTitle></CardHeader>
@@ -318,7 +317,7 @@ export default function ApresentacaoPage() {
         </TabsContent>
 
         {/* PRÓXIMOS PASSOS */}
-        <TabsContent value="planejamento">
+        <TabsContent value="planejamento" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><CalendarRange className="w-4 h-4" /> Próximos passos e contraste planejado × executado</CardTitle></CardHeader>
             <CardContent>
