@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PlantaMarcacoes, { type Marcacao } from '@/components/PlantaMarcacoes';
 import { useAuth } from '@/context/AuthContext';
 import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon, Maximize2, Minimize2, Camera, Palette, CalendarRange } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
@@ -27,7 +28,8 @@ export default function ApresentacaoPage() {
   const [servicos, setServicos] = useState<any[]>([]);
   const [atividades, setAtividades] = useState<any[]>([]);
   const [avancoObra, setAvancoObra] = useState(0);
-  const [capa, setCapa] = useState<{ url: string; legenda: string; cor: string }>({ url: '', legenda: '', cor: '#0ea5e9' });
+  const [capa, setCapa] = useState<{ url: string; legenda: string }>({ url: '', legenda: '' });
+  const [planta, setPlanta] = useState<{ url: string; marcacoes: Marcacao[] }>({ url: '', marcacoes: [] });
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
   const [full, setFull] = useState(false);
@@ -39,6 +41,7 @@ export default function ApresentacaoPage() {
   useEffect(() => {
     if (!empresaId) return;
     ConfigService.get(empresaId, `capa_${obraId}`).then((c) => { if (c) setCapa(c); });
+    ConfigService.get(empresaId, `planta_${obraId}`).then((p) => { if (p) setPlanta(p); });
   }, [empresaId, obraId]);
 
   useEffect(() => {
@@ -78,13 +81,26 @@ export default function ApresentacaoPage() {
     if (empresaId) await ConfigService.set(empresaId, `capa_${obraId}`, nova);
   };
 
-  const uploadCapa = async (file: File) => {
-    const path = `capas/${obraId}/${Date.now()}_${file.name}`;
+  const uploadImagem = async (file: File, tipo: 'capa' | 'planta') => {
+    const path = `${tipo}s/${obraId}/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('orvian-evidencias').upload(path, file, { upsert: true });
     if (error) { setMsg('Erro no upload: ' + error.message); return; }
     const { data: pub } = supabase.storage.from('orvian-evidencias').getPublicUrl(path);
-    await salvarCapa({ url: pub.publicUrl });
-    setMsg('Imagem da capa atualizada.');
+    if (tipo === 'capa') {
+      await salvarCapa({ url: pub.publicUrl });
+      setMsg('Imagem da capa atualizada.');
+    } else {
+      const nova = { ...planta, url: pub.publicUrl };
+      setPlanta(nova);
+      if (empresaId) await ConfigService.set(empresaId, `planta_${obraId}`, nova);
+      setMsg('Imagem da planta atualizada.');
+    }
+  };
+
+  const salvarPlanta = async (marcacoes: Marcacao[]) => {
+    const nova = { ...planta, marcacoes };
+    setPlanta(nova);
+    if (empresaId) await ConfigService.set(empresaId, `planta_${obraId}`, nova);
   };
 
   const toggleFull = async () => {
@@ -146,8 +162,9 @@ export default function ApresentacaoPage() {
 
       {obraId && (
       <Tabs defaultValue="capa">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="capa">Capa</TabsTrigger>
+          <TabsTrigger value="planta">Planta</TabsTrigger>
           <TabsTrigger value="execucao">Execução</TabsTrigger>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="planejamento">Próximos Passos</TabsTrigger>
@@ -165,7 +182,7 @@ export default function ApresentacaoPage() {
               <div className="relative z-10 w-full p-6" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,.75))' }}>
                 <div className="text-white">
                   <div className="text-sm uppercase tracking-widest opacity-80">ORVIAN · Apresentação de Obra</div>
-                  <h2 className="text-3xl font-bold" style={{ borderLeft: `6px solid ${capa.cor}`, paddingLeft: 12 }}>{obra?.nome}</h2>
+                  <h2 className="text-3xl font-bold" style={{ borderLeft: '6px solid #0ea5e9', paddingLeft: 12 }}>{obra?.nome}</h2>
                   <p className="opacity-90">{obra?.cliente} · {new Date().toLocaleDateString('pt-BR')}</p>
                   {capa.legenda && <p className="mt-2 text-sm italic">“{capa.legenda}”</p>}
                 </div>
@@ -174,17 +191,9 @@ export default function ApresentacaoPage() {
             <CardContent className="space-y-3">
               <div className="flex flex-wrap gap-2 items-center">
                 <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border">
-                  <Camera className="w-4 h-4" /> Subir imagem
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCapa(f); }} />
+                  <Camera className="w-4 h-4" /> Subir imagem da empresa
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImagem(f, 'capa'); }} />
                 </label>
-                <div className="flex items-center gap-1">
-                  <Palette className="w-4 h-4" />
-                  {CORES_LEGENDA.map((c) => (
-                    <button key={c} title="Cor da marcação" onClick={() => salvarCapa({ cor: c })}
-                      className={`w-6 h-6 rounded-full border-2 ${capa.cor === c ? 'border-white ring-2 ring-primary' : 'border-transparent'}`}
-                      style={{ background: c }} />
-                  ))}
-                </div>
               </div>
               <Textarea placeholder="Legenda da imagem / marcação da obra" value={capa.legenda}
                 onChange={(e) => setCapa({ ...capa, legenda: e.target.value })}
@@ -196,6 +205,28 @@ export default function ApresentacaoPage() {
                 <div><div className="text-2xl font-bold">{dados.diarios}</div><div className="text-xs text-muted-foreground">Diários</div></div>
                 <div><div className="text-2xl font-bold text-emerald-600">{avancoObra}%</div><div className="text-xs text-muted-foreground">Avanço físico</div></div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PLANTA */}
+        <TabsContent value="planta" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Camera className="w-4 h-4" /> Imagem da planta</CardTitle></CardHeader>
+            <CardContent>
+              <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border">
+                <Camera className="w-4 h-4" /> Subir imagem da planta
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImagem(f, 'planta'); }} />
+              </label>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <PlantaMarcacoes
+                imagem={planta.url}
+                marcacoes={planta.marcacoes || []}
+                onChange={salvarPlanta}
+              />
             </CardContent>
           </Card>
         </TabsContent>
