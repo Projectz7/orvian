@@ -244,6 +244,28 @@ export const PlanejamentosService = {
 };
 
 // ============================================================
+// CONFIGURAÇÕES DA APRESENTAÇÃO (capa, legenda, cores)
+// ============================================================
+export const ConfigService = {
+  async get(empresaId: string | null, chave: string): Promise<any> {
+    if (!empresaId) return null;
+    const { data } = await supabase.from('orv_configuracoes' as any)
+      .select('valor').eq('empresa_id', empresaId).eq('chave', chave).maybeSingle();
+    return data?.valor || null;
+  },
+  async set(empresaId: string | null, chave: string, valor: any): Promise<void> {
+    if (!empresaId) return;
+    const { data: existing } = await supabase.from('orv_configuracoes' as any)
+      .select('id').eq('empresa_id', empresaId).eq('chave', chave).maybeSingle();
+    if (existing) {
+      await supabase.from('orv_configuracoes' as any).update({ valor, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    } else {
+      await supabase.from('orv_configuracoes' as any).insert({ empresa_id: empresaId, chave, valor });
+    }
+  },
+};
+
+// ============================================================
 // AVANÇO FÍSICO — calculado no banco (motor orv_avanco_servico/obra)
 // ============================================================
 export const AvancoService = {

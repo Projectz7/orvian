@@ -1,18 +1,23 @@
-import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService, AvancoService } from '@/lib/orvianService';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState, useRef } from 'react';
+import { ObrasService, PropostasService, AvancoService, ConfigService, servicosDaObra } from '@/lib/orvianService';
 import { exportarRelatorio, importarRelatorio } from '@/lib/relatorioService';
+import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
-import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon } from 'lucide-react';
+import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon, Maximize2, Minimize2, Camera, Palette, CalendarRange } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const CORES = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const CORES_LEGENDA = ['#0f172a', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function ApresentacaoPage() {
   const { empresaId } = useAuth();
+  const rootRef = useRef<HTMLDivElement>(null);
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
   const [propostas, setPropostas] = useState<Proposta[]>([]);
@@ -20,45 +25,71 @@ export default function ApresentacaoPage() {
   const [dados, setDados] = useState({ atividades: 0, diarios: 0, planejados: 0, concluidos: 0 });
   const [evolucao, setEvolucao] = useState<any[]>([]);
   const [servicos, setServicos] = useState<any[]>([]);
+  const [atividades, setAtividades] = useState<any[]>([]);
   const [avancoObra, setAvancoObra] = useState(0);
+  const [capa, setCapa] = useState<{ url: string; legenda: string; cor: string }>({ url: '', legenda: '', cor: '#0ea5e9' });
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
+  const [full, setFull] = useState(false);
+
+  const obra = obras.find((o) => o.id === obraId) || null;
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => {
+    if (!empresaId) return;
+    ConfigService.get(empresaId, `capa_${obraId}`).then((c) => { if (c) setCapa(c); });
+  }, [empresaId, obraId]);
 
   useEffect(() => {
     (async () => {
       if (!obraId) return;
       let q = supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'atividade');
       if (propostaId) q = q.eq('proposta_id', propostaId);
-      const { count: atividades } = await q;
+      const { count: atividadesCount } = await q;
       const { count: diarios } = await supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'diario');
       const { count: planejados } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId);
       const { count: concluidos } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('status', 'concluida');
       AvancoService.obra(obraId).then(setAvancoObra);
 
-      // Evolução diária: atividades executadas agrupadas por data
-      const { data: ativs } = await supabase.from('diario_obra' as any).select('data, status_etapa').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
+      const { data: ativs } = await supabase.from('diario_obra' as any).select('data, status_etapa, descricao, servico_id, fotos').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
+      setAtividades(ativs || []);
       const porData: Record<string, number> = {};
       (ativs || []).forEach((a: any) => { porData[a.data] = (porData[a.data] || 0) + 1; });
       let acum = 0;
-      const evol = Object.keys(porData).sort().map((d) => ({ data: d.slice(5), executado: (acum += porData[d]), planejado: planejados || 0 }));
-      setEvolucao(evol);
+      setEvolucao(Object.keys(porData).sort().map((d) => ({ data: d.slice(5), executado: (acum += porData[d]), planejado: planejados || 0 })));
 
-      // Mapa da obra: serviços e a execução de cada um
       const { data: servs } = await supabase.from('orv_servicos' as any).select('id, nome, proposta_id').eq('empresa_id', empresaId);
-      const { data: ativServ } = await supabase.from('diario_obra' as any).select('servico_id, status_etapa').eq('obra_id', obraId).eq('tipo_registro', 'atividade');
       const mapa = (servs || []).map((s: any) => {
-        const feitas = (ativServ || []).filter((a: any) => a.servico_id === s.id);
+        const feitas = (ativs || []).filter((a: any) => a.servico_id === s.id);
         const concluidas = feitas.filter((a: any) => a.status_etapa === 'concluida').length;
         return { nome: s.nome, total: feitas.length, concluidas, progresso: feitas.length ? Math.round((concluidas / feitas.length) * 100) : 0 };
       });
-      setServicos(mapa);
-
-      setDados({ atividades: atividades || 0, diarios: diarios || 0, planejados: planejados || 0, concluidos: concluidos || 0 });
+      const doPrecalc = servicosDaObra(obra).map((s) => ({ nome: s.nome, total: 0, concluidas: 0, progresso: 0 }));
+      setServicos([...mapa, ...doPrecalc]);
+      setDados({ atividades: atividadesCount || 0, diarios: diarios || 0, planejados: planejados || 0, concluidos: concluidos || 0 });
     })();
-  }, [obraId, propostaId]);
+  }, [obraId, propostaId, empresaId, obra]);
+
+  const salvarCapa = async (patch: Partial<typeof capa>) => {
+    const nova = { ...capa, ...patch };
+    setCapa(nova);
+    if (empresaId) await ConfigService.set(empresaId, `capa_${obraId}`, nova);
+  };
+
+  const uploadCapa = async (file: File) => {
+    const path = `capas/${obraId}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('orvian-evidencias').upload(path, file, { upsert: true });
+    if (error) { setMsg('Erro no upload: ' + error.message); return; }
+    const { data: pub } = supabase.storage.from('orvian-evidencias').getPublicUrl(path);
+    await salvarCapa({ url: pub.publicUrl });
+    setMsg('Imagem da capa atualizada.');
+  };
+
+  const toggleFull = async () => {
+    if (!full) { await rootRef.current?.requestFullscreen?.(); setFull(true); }
+    else { await document.exitFullscreen?.(); setFull(false); }
+  };
 
   const baixar = async () => {
     setExporting(true); setMsg('');
@@ -72,13 +103,9 @@ export default function ApresentacaoPage() {
     catch (e: any) { setMsg('Erro: ' + e.message); }
   };
 
-  const obra = obras.find((o) => o.id === obraId);
-  const semDados = dados.atividades === 0 && dados.planejados === 0;
   const barras = [
-    { nome: 'Planejadas', valor: dados.planejados },
-    { nome: 'Concluídas', valor: dados.concluidos },
-    { nome: 'Lançamentos', valor: dados.atividades },
-    { nome: 'Diários', valor: dados.diarios },
+    { nome: 'Planejadas', valor: dados.planejados }, { nome: 'Concluídas', valor: dados.concluidos },
+    { nome: 'Lançamentos', valor: dados.atividades }, { nome: 'Diários', valor: dados.diarios },
   ];
   const pizza = [
     { name: 'Concluídas', value: dados.concluidos || 1 },
@@ -86,10 +113,13 @@ export default function ApresentacaoPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className={`space-y-4 ${full ? 'bg-slate-900 p-6 text-white' : ''}`}>
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Apresentação Executiva</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" variant="outline" onClick={toggleFull}>
+            {full ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
           <Button size="sm" variant="outline" onClick={baixar} disabled={exporting || !obraId}>
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Baixar Excel
           </Button>
@@ -111,101 +141,151 @@ export default function ApresentacaoPage() {
         </select>
       </div>
 
-      {obra && (
-        <Card>
-          <CardHeader><CardTitle>{obra.nome}</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-            <div><div className="text-2xl font-bold">{dados.atividades}</div><div className="text-xs text-muted-foreground">Atividades</div></div>
-            <div><div className="text-2xl font-bold">{dados.planejados}</div><div className="text-xs text-muted-foreground">Planejadas</div></div>
-            <div><div className="text-2xl font-bold">{dados.concluidos}</div><div className="text-xs text-muted-foreground">Concluídas</div></div>
-            <div><div className="text-2xl font-bold">{dados.diarios}</div><div className="text-xs text-muted-foreground">Diários</div></div>
-            <div><div className="text-2xl font-bold text-emerald-600">{avancoObra}%</div><div className="text-xs text-muted-foreground">Avanço físico (por peso)</div></div>
-          </CardContent>
-        </Card>
-      )}
+      {!obraId && <p className="text-muted-foreground text-sm">Selecione uma obra para apresentar.</p>}
 
-      {semDados && (
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">
-          {obraId
-            ? 'Ainda não há lançamentos nesta obra. Os gráficos já estão preparados e serão preenchidos automaticamente conforme a execução é registrada.'
-            : 'Selecione uma obra para filtrar. Os gráficos já estão preparados e serão preenchidos automaticamente conforme a execução é registrada.'}
-        </p>
-      )}
+      {obraId && (
+      <Tabs defaultValue="capa">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="capa">Capa</TabsTrigger>
+          <TabsTrigger value="execucao">Execução</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="planejamento">Próximos Passos</TabsTrigger>
+        </TabsList>
 
-      <div className="grid md:grid-cols-2 gap-4">
+        {/* CAPA */}
+        <TabsContent value="capa">
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Resumo da Execução</CardTitle></CardHeader>
+            <div className="relative h-80 rounded-t-lg overflow-hidden flex items-end">
+              {capa.url ? (
+                <img src={capa.url} alt="Capa" className="absolute inset-0 w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${capa.cor}, #0f172a)` }} />
+              )}
+              <div className="relative z-10 w-full p-6" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,.75))' }}>
+                <div className="text-white">
+                  <div className="text-sm uppercase tracking-widest opacity-80">ORVIAN · Apresentação de Obra</div>
+                  <h2 className="text-3xl font-bold" style={{ borderLeft: `6px solid ${capa.cor}`, paddingLeft: 12 }}>{obra?.nome}</h2>
+                  <p className="opacity-90">{obra?.cliente} · {new Date().toLocaleDateString('pt-BR')}</p>
+                  {capa.legenda && <p className="mt-2 text-sm italic">“{capa.legenda}”</p>}
+                </div>
+              </div>
+            </div>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2 items-center">
+                <label className="cursor-pointer inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border">
+                  <Camera className="w-4 h-4" /> Subir imagem
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCapa(f); }} />
+                </label>
+                <div className="flex items-center gap-1">
+                  <Palette className="w-4 h-4" />
+                  {CORES_LEGENDA.map((c) => (
+                    <button key={c} title="Cor da marcação" onClick={() => salvarCapa({ cor: c })}
+                      className={`w-6 h-6 rounded-full border-2 ${capa.cor === c ? 'border-white ring-2 ring-primary' : 'border-transparent'}`}
+                      style={{ background: c }} />
+                  ))}
+                </div>
+              </div>
+              <Textarea placeholder="Legenda da imagem / marcação da obra" value={capa.legenda}
+                onChange={(e) => setCapa({ ...capa, legenda: e.target.value })}
+                onBlur={() => salvarCapa({ legenda: capa.legenda })} />
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-3 pt-2">
+                <div><div className="text-2xl font-bold">{dados.atividades}</div><div className="text-xs text-muted-foreground">Atividades</div></div>
+                <div><div className="text-2xl font-bold">{dados.planejados}</div><div className="text-xs text-muted-foreground">Planejadas</div></div>
+                <div><div className="text-2xl font-bold">{dados.concluidos}</div><div className="text-xs text-muted-foreground">Concluídas</div></div>
+                <div><div className="text-2xl font-bold">{dados.diarios}</div><div className="text-xs text-muted-foreground">Diários</div></div>
+                <div><div className="text-2xl font-bold text-emerald-600">{avancoObra}%</div><div className="text-xs text-muted-foreground">Avanço físico</div></div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* EXECUÇÃO */}
+        <TabsContent value="execucao" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Evolução planejado × executado</CardTitle></CardHeader>
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barras}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="nome" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="valor" fill="#0ea5e9" radius={[4,4,0,0]} />
-                  </BarChart>
+                  <LineChart data={evolucao.length ? evolucao : [{ data: '—', executado: 0, planejado: 0 }]}>
+                    <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="data" /><YAxis allowDecimals={false} />
+                    <Tooltip /><Legend /><Line type="monotone" dataKey="planejado" stroke="#f59e0b" name="Planejado" />
+                    <Line type="monotone" dataKey="executado" stroke="#10b981" name="Executado" />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><PieIcon className="w-4 h-4" /> Situação das Atividades</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Atividades executadas</CardTitle></CardHeader>
             <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pizza} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} label>
-                      {pizza.map((_, i) => <Cell key={i} fill={CORES[i]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              {atividades.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma atividade executada ainda.</p> : (
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b text-left"><th className="py-2">Data</th><th>Atividade</th><th>Status</th><th>Fotos</th></tr></thead>
+                  <tbody>{atividades.slice(0, 50).map((a: any, i: number) => (
+                    <tr key={i} className="border-b"><td className="py-1">{a.data}</td><td>{a.descricao}</td>
+                      <td>{a.status_etapa === 'concluida' ? 'Concluída' : 'Registrada'}</td><td>{a.fotos?.length || 0}</td></tr>
+                  ))}</tbody>
+                </table>
+              )}
             </CardContent>
           </Card>
-      </div>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Mapa da obra — serviços</CardTitle></CardHeader>
+            <CardContent>
+              <table className="w-full text-sm">
+                <thead><tr className="border-b text-left"><th className="py-2">Serviço</th><th>Atividades</th><th>Concluídas</th><th>Progresso</th></tr></thead>
+                <tbody>{servicos.map((s, i) => (
+                  <tr key={i} className="border-b"><td className="py-2">{s.nome}</td><td>{s.total}</td><td>{s.concluidas}</td>
+                    <td><div className="w-full bg-muted rounded h-2"><div className="bg-emerald-500 h-2 rounded" style={{ width: `${s.progresso}%` }} /></div><span className="text-xs">{s.progresso}%</span></td></tr>
+                ))}</tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Evolução: planejado × executado</CardTitle></CardHeader>
-        <CardContent>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={evolucao.length ? evolucao : [{ data: '—', executado: 0, planejado: 0 }]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="data" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="planejado" stroke="#f59e0b" name="Planejado" />
-                <Line type="monotone" dataKey="executado" stroke="#10b981" name="Executado" />
-              </LineChart>
-            </ResponsiveContainer>
+        {/* DASHBOARD */}
+        <TabsContent value="dashboard">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Resumo da execução</CardTitle></CardHeader>
+              <CardContent><div className="h-64"><ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barras}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="nome" /><YAxis allowDecimals={false} />
+                  <Tooltip /><Bar dataKey="valor" fill="#0ea5e9" radius={[4,4,0,0]} /></BarChart>
+              </ResponsiveContainer></div></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><PieIcon className="w-4 h-4" /> Situação das atividades</CardTitle></CardHeader>
+              <CardContent><div className="h-64"><ResponsiveContainer width="100%" height="100%">
+                <PieChart><Pie data={pizza} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} label>
+                  {pizza.map((_, i) => <Cell key={i} fill={CORES[i]} />)}</Pie><Tooltip /></PieChart>
+              </ResponsiveContainer></div></CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {servicos.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Mapa da Obra — Serviços</CardTitle></CardHeader>
-          <CardContent>
-            <table className="w-full text-sm">
-              <thead><tr className="border-b text-left"><th className="py-2">Serviço</th><th>Atividades</th><th>Concluídas</th><th>Progresso</th></tr></thead>
-              <tbody>
-                {servicos.map((s, i) => (
-                  <tr key={i} className="border-b">
-                    <td className="py-2">{s.nome}</td>
-                    <td>{s.total}</td><td>{s.concluidas}</td>
-                    <td>
-                      <div className="w-full bg-muted rounded h-2"><div className="bg-emerald-500 h-2 rounded" style={{ width: `${s.progresso}%` }} /></div>
-                      <span className="text-xs">{s.progresso}%</span>
-                    </td>
-                  </tr>
+        {/* PRÓXIMOS PASSOS */}
+        <TabsContent value="planejamento">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><CalendarRange className="w-4 h-4" /> Próximos passos e contraste planejado × executado</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {servicos.length === 0 ? <p className="text-sm text-muted-foreground">Sem serviços cadastrados.</p> : servicos.map((s, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_3fr] items-center gap-2">
+                    <div className="text-xs truncate">{s.nome}</div>
+                    <div className="relative h-6 bg-muted rounded">
+                      <div className="absolute h-6 bg-amber-300/60 rounded w-full" />
+                      <div className="absolute h-6 bg-emerald-500/70 rounded flex items-center justify-end pr-1" style={{ width: `${s.progresso}%` }}>
+                        <span className="text-[10px] text-white">{s.progresso}%</span>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Âmbar = planejado · Verde = executado · O restante é o pendente.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       )}
 
       {msg && <p className="text-sm">{msg}</p>}
