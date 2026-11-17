@@ -106,3 +106,8 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 15.2 Planejamento: tarefas expansíveis mostrando subtarefas (data, descrição, fotos)
 - [x] 15.3 Botão "Registrar atividade diária" dentro da tarefa (marca como concluída)
 - [x] 15.4 Lançamento: seleção de tarefa do planejamento marca como executada ao registrar
+
+### Etapa 16 — Modo fábrica (17/11)
+- [x] 16.1 Motor de avanço físico por peso/quantidade no banco (`orv_avanco_servico`, `orv_avanco_obra`)
+- [x] 16.2 Avanço físico exibido na Apresentação
+- [x] 16.3 Gantt visual embutido no Planejamento (barra planejada + barra executada)
