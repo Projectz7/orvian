@@ -244,6 +244,22 @@ export const PlanejamentosService = {
 };
 
 // ============================================================
+// AVANÇO FÍSICO — calculado no banco (motor orv_avanco_servico/obra)
+// ============================================================
+export const AvancoService = {
+  async obra(obraId: string): Promise<number> {
+    const { data, error } = await supabase.rpc('orv_avanco_obra' as any, { p_obra_id: obraId });
+    if (error) throw error;
+    return Number(data || 0);
+  },
+  async servico(servicoId: string): Promise<number> {
+    const { data, error } = await supabase.rpc('orv_avanco_servico' as any, { p_servico_id: servicoId });
+    if (error) throw error;
+    return Number(data || 0);
+  },
+};
+
+// ============================================================
 // EVIDÊNCIAS — tabela COMPARTILHADA public.pedidos (foto_url)
 // ============================================================
 export const EvidenciasService = {

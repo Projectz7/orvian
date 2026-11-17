@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService } from '@/lib/orvianService';
+import { ObrasService, PropostasService, AvancoService } from '@/lib/orvianService';
 import { supabase } from '@/integrations/supabase/client';
 import { exportarRelatorio, importarRelatorio } from '@/lib/relatorioService';
 import type { Obra, Proposta } from '@/types';
@@ -20,6 +20,7 @@ export default function ApresentacaoPage() {
   const [dados, setDados] = useState({ atividades: 0, diarios: 0, planejados: 0, concluidos: 0 });
   const [evolucao, setEvolucao] = useState<any[]>([]);
   const [servicos, setServicos] = useState<any[]>([]);
+  const [avancoObra, setAvancoObra] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -35,6 +36,7 @@ export default function ApresentacaoPage() {
       const { count: diarios } = await supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'diario');
       const { count: planejados } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId);
       const { count: concluidos } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('status', 'concluida');
+      AvancoService.obra(obraId).then(setAvancoObra);
 
       // Evolução diária: atividades executadas agrupadas por data
       const { data: ativs } = await supabase.from('diario_obra' as any).select('data, status_etapa').eq('obra_id', obraId).eq('tipo_registro', 'atividade').order('data');
@@ -117,6 +119,7 @@ export default function ApresentacaoPage() {
             <div><div className="text-2xl font-bold">{dados.planejados}</div><div className="text-xs text-muted-foreground">Planejadas</div></div>
             <div><div className="text-2xl font-bold">{dados.concluidos}</div><div className="text-xs text-muted-foreground">Concluídas</div></div>
             <div><div className="text-2xl font-bold">{dados.diarios}</div><div className="text-xs text-muted-foreground">Diários</div></div>
+            <div><div className="text-2xl font-bold text-emerald-600">{avancoObra}%</div><div className="text-xs text-muted-foreground">Avanço físico (por peso)</div></div>
           </CardContent>
         </Card>
       )}
