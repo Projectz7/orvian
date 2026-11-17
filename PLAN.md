@@ -121,3 +121,5 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 17.6 Storage: policies aceitam capas/{obraId}, plantas/{obraId} (upload funcionando)
 - [x] 17.7 Capa sem legenda; logo, nome e cores da empresa vêm da P7Store (`empresa.logo_url/nome/cor_*`)
 - [x] 17.8 Galeria de imagens da planta acumulativa (adicionar, selecionar, excluir)
+- [x] 17.9 Logo/nome da empresa (P7Store) na barra lateral e topbar mobile do app
+- [x] 17.10 Apresentação sem logo (empresas parceiras); tela cheia com abas no topo e conteúdo preenchendo a tela
