@@ -16,6 +16,7 @@ import CadastrosPage from "@/pages/CadastrosPage";
 import RelatoriosPage from "@/pages/RelatoriosPage";
 import ConfiguracoesPage from "@/pages/ConfiguracoesPage";
 import CustosPage from "@/pages/CustosPage";
+import ProvisionamentoPage from "@/pages/ProvisionamentoPage";
 import { Toaster } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
             <Route path="custos" element={<CustosPage />} />
+            <Route path="provisionamento" element={<ProvisionamentoPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

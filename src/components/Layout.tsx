@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Home, BarChart3, Presentation, CalendarDays, Image, PlusCircle, BookOpen, CheckSquare, Building2, Settings, FileDown, Cog, Menu, X, Wallet } from "lucide-react";
+import { Home, BarChart3, Presentation, CalendarDays, Image, PlusCircle, BookOpen, CheckSquare, Building2, Settings, FileDown, Cog, Menu, X, Wallet, PiggyBank } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { EmpresaService } from "@/lib/orvianService";
 
@@ -18,6 +18,7 @@ const menu = [
   { to: "/relatorios", label: "Relatórios", icon: FileDown, short: "Relat." },
   { to: "/configuracoes", label: "Configurações", icon: Cog, short: "Config." },
   { to: "/custos", label: "Custos do Projeto", icon: Wallet, short: "Custos" },
+  { to: "/provisionamento", label: "Provisionamento", icon: PiggyBank, short: "Prov." },
 ];
 
 function Brand() {

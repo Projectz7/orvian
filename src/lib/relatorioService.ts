@@ -72,6 +72,8 @@ export const COLUNAS_BASES: Record<string, string[]> = {
   DIARIO_DIAS: ['id', 'obra_id', 'data', 'descricao', 'observacoes_finais', 'empresa_id'],
   ATIVIDADES: ['id', 'obra_id', 'proposta_id', 'servico_id', 'etapa_id', 'data', 'descricao', 'microtarefas', 'quantidade', 'unidade', 'responsavel', 'ocorrencias', 'observacoes', 'empresa_id'],
   EVIDENCIAS: ['id', 'obra_id', 'proposta_id', 'foto_url', 'legenda', 'descricao', 'data_pedido', 'empresa_id'],
+  FLUXO_CAIXA: ['id', 'empresa_id', 'obra_id', 'data', 'categoria', 'descricao', 'valor', 'provisionado', 'servico', 'bpo_only'],
+  PROVISIONAMENTO: ['id', 'empresa_id', 'obra_id', 'data', 'natureza', 'descricao', 'provisionado', 'gasto', 'servico'],
 };
 
 function fillSheet(ws: ExcelJS.Worksheet, rows: any[], headers?: string[]) {
