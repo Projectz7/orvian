@@ -130,3 +130,6 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 18.2 Aba Custos no menu/rota: tabela editável + naturezas padrão do exemplo
 - [x] 18.3 Leitura do custo REAL de `lancamentos_caixa` (DiGest) — somente leitura
 - [x] 18.4 Indicadores Projetado / Investido / Saldo / Resultado + gráfico comparativo por natureza
+- [x] 18.5 Coluna `provisionado` em `lancamentos_caixa` (modelo DiGest, sem nova tabela)
+- [x] 18.6 Importar planilha ProvGast (Data|NATUREZA|DESCRIÇÃO|GASTO|PROVISIONADO) → lança provisionamento no caixa
+- [x] 18.7 Gráfico Provisionado × Gasto × Saldo mês a mês + tabela detalhada
