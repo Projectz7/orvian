@@ -283,13 +283,23 @@ export const CustosService = {
   // Custo REAL (saídas) lido do DiGest — só leitura, nunca grava
   async reais(empresaId: string | null, obraId: string): Promise<any[]> {
     const { data, error } = await supabase.from('lancamentos_caixa' as any)
-      .select('id, data, categoria, descricao, valor, servico')
-      .eq('obra_id', obraId).eq('bpo_only', false).lt('valor', 0);
+      .select('id, data, categoria, descricao, valor, servico, provisionado')
+      .eq('obra_id', obraId).eq('bpo_only', false);
     if (error) throw error;
     return (data || []).map((l: any) => ({
       id: l.id, data: l.data, natureza: l.categoria || 'Outros',
-      descricao: l.descricao, valor: Math.abs(Number(l.valor || 0)), servico: l.servico,
+      descricao: l.descricao, valor: Math.abs(Number(l.valor || 0)),
+      provisionado: Number(l.provisionado || 0), servico: l.servico,
     }));
+  },
+  // Lançamento de PROVISIONAMENTO no fluxo de caixa (modelo DiGest + coluna provisionado)
+  async lanarProvisionamento(empresaId: string, obraId: string, natureza: string, descricao: string, valor: number, data: string, servico?: string) {
+    const { error } = await supabase.from('lancamentos_caixa' as any).insert({
+      empresa_id: empresaId, obra_id: obraId, categoria: natureza, descricao,
+      valor: 0, provisionado: Math.abs(valor), data, servico: servico || null,
+      bpo_only: false,
+    });
+    if (error) throw error;
   },
 };
 
