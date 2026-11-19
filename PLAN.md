@@ -133,3 +133,10 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 18.5 Coluna `provisionado` em `lancamentos_caixa` (modelo DiGest, sem nova tabela)
 - [x] 18.6 Importar planilha ProvGast (Data|NATUREZA|DESCRIÇÃO|GASTO|PROVISIONADO) → lança provisionamento no caixa
 - [x] 18.7 Gráfico Provisionado × Gasto × Saldo mês a mês + tabela detalhada
+
+### Etapa 19 — Aba de Provisionamento (19/11)
+- [x] 19.1 Página Provisionamento (menu/rota) usa a mesma tabela `lancamentos_caixa` (coluna `provisionado`)
+- [x] 19.2 selecionar obra → período (data_inicio até previsao_conclusao) define os meses
+- [x] 19.3 informar descrição/natureza, valor total e duração → valor dividido e lançado mês a mês
+- [x] 19.4 painel: total provisionado, gráfico mensal, tabela de lançamentos com exclusão
+- [x] 19.5 colunas `FLUXO_CAIXA` e `PROVISIONAMENTO` adicionadas ao modelo de exportação
