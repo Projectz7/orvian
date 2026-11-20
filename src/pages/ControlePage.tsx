@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService, ServicosService, EtapasService } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService, EtapasService } from '@/lib/orvianService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Etapa } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -13,16 +13,13 @@ export default function ControlePage() {
   const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
-  const [propostas, setPropostas] = useState<Proposta[]>([]);
-  const [propostaId, setPropostaId] = useState('');
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [servicoId, setServicoId] = useState('');
   const [etapas, setEtapas] = useState<Etapa[]>([]);
   const [controle, setControle] = useState<Record<string, any>>({});
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
+  useEffect(() => { if (obraId) ServicosObraService.listByObraId(empresaId, obraId).then(setServicos); else setServicos([]); }, [obraId, empresaId]);
   useEffect(() => {
     if (servicoId) {
       EtapasService.listByServico(servicoId, empresaId).then(async (ets) => {
@@ -52,17 +49,13 @@ export default function ControlePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Controle de Execução</h1>
-      <div className="grid md:grid-cols-3 gap-2">
-        <select className="border rounded p-2" value={obraId} onChange={(e) => { setObraId(e.target.value); setPropostaId(''); setServicoId(''); }}>
+      <div className="grid md:grid-cols-2 gap-2">
+        <select className="border rounded p-2" value={obraId} onChange={(e) => { setObraId(e.target.value); setServicoId(''); }}>
           <option value="">Obra</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
         </select>
-        <select className="border rounded p-2" value={propostaId} onChange={(e) => { setPropostaId(e.target.value); setServicoId(''); }}>
-          <option value="">Proposta</option>
-          {propostas.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-        </select>
         <select className="border rounded p-2" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
-          <option value="">Serviço</option>
+          <option value="">Serviço / Contrato</option>
           {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
         </select>
       </div>

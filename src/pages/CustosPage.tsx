@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, CustosService, PropostasService, ServicosService } from '@/lib/orvianService';
+import { ObrasService, CustosService, ServicosObraService } from '@/lib/orvianService';
 import type { Obra } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,11 +30,7 @@ export default function CustosPage() {
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
   useEffect(() => {
     if (obraId) {
-      PropostasService.listByObra(obraId, empresaId).then(async (props) => {
-        const todos: any[] = [];
-        for (const p of props) todos.push(...await ServicosService.listByProposta(p.id, empresaId));
-        setServicos(todos);
-      });
+      ServicosObraService.listByObraId(empresaId, obraId).then(setServicos);
     } else setServicos([]);
   }, [obraId, empresaId]);
 

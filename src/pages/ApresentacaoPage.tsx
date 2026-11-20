@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ObrasService, PropostasService, AvancoService, ConfigService, EmpresaService, CustosService, servicosDaObra } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService, AvancoService, ConfigService, EmpresaService, CustosService, servicosDaObra } from '@/lib/orvianService';
 import { exportarRelatorio, importarRelatorio } from '@/lib/relatorioService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta } from '@/types';
@@ -41,7 +41,7 @@ export default function ApresentacaoPage() {
   const obra = obras.find((o) => o.id === obraId) || null;
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
+  useEffect(() => { if (obraId) ServicosObraService.listByObraId(empresaId, obraId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
   useEffect(() => {
     if (!empresaId) return;
     ConfigService.get(empresaId, `capa_${obraId}`).then((c) => { if (c) setCapa(c); });
@@ -53,7 +53,7 @@ export default function ApresentacaoPage() {
     (async () => {
       if (!obraId) return;
       let q = supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'atividade');
-      if (propostaId) q = q.eq('proposta_id', propostaId);
+      if (propostaId) q = q.eq('servico_id', propostaId);
       const { count: atividadesCount } = await q;
       const { count: diarios } = await supabase.from('diario_obra' as any).select('*', { count: 'exact' }).eq('obra_id', obraId).eq('tipo_registro', 'diario');
       const { count: planejados } = await supabase.from('plano_tarefas' as any).select('*', { count: 'exact' }).eq('obra_id', obraId);
@@ -185,7 +185,7 @@ export default function ApresentacaoPage() {
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome || 'Obra'}</option>)}
         </select>
         <select className="border rounded p-2" value={propostaId} onChange={(e) => setPropostaId(e.target.value)} disabled={!obraId}>
-          <option value="">Toda a obra (ou escolha o contrato)</option>
+          <option value="">Toda a obra (ou escolha o serviço/contrato)</option>
           {propostas.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
         </select>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService, ServicosService, ElementosService, EtapasService, AtividadesService, PlanejamentosService, servicosDaObra } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService, ElementosService, EtapasService, AtividadesService, PlanejamentosService } from '@/lib/orvianService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Elemento, Etapa, Atividade } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -44,17 +44,9 @@ export default function LancamentoPage() {
   }, [empresaId]);
 
   useEffect(() => {
-    // Serviços da obra = projetos do PreciCalc/DiGest + serviços ORVIAN
-    const doPrecalc = servicosDaObra(obra);
+    // Serviços da obra = contratos aprovados no PreciCalc/DiGest (obras.projetos)
     if (obraId) {
-      PropostasService.listByObra(obraId, empresaId).then(async (props) => {
-        const todos: Servico[] = [...doPrecalc];
-        for (const p of props) {
-          const s = await ServicosService.listByProposta(p.id, empresaId);
-          todos.push(...s.map((x) => ({ ...x, proposta_id: p.id } as Servico)));
-        }
-        setServicos(todos);
-      });
+      ServicosObraService.listByObraId(empresaId, obraId).then(setServicos);
       PlanejamentosService.list(empresaId, obraId).then(setTarefas);
     } else {
       setServicos([]); setTarefas([]);
@@ -97,8 +89,7 @@ export default function LancamentoPage() {
       const servico = servicos.find((s) => s.id === servicoId);
       await AtividadesService.create({
         obra_id: obraId || null,
-        proposta_id: servico?.proposta_id || null,
-        servico_id: servicoId.startsWith('projeto:') ? null : (servicoId || null),
+        servico_id: servicoId || null,
         elemento_id: elementoId || null,
         etapa_id: etapaId || null,
         data, descricao, quantidade: quantidade ? Number(quantidade) : null,

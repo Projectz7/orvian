@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ObrasService, PropostasService, EvidenciasService, AtividadesService } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService, EvidenciasService, AtividadesService } from '@/lib/orvianService';
 import type { Obra, Proposta } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ export default function HistoricoPage() {
   const [evids, setEvids] = useState<any[]>([]);
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); }, [obraId, empresaId]);
+  useEffect(() => { if (obraId) ServicosObraService.listByObraId(empresaId, obraId).then(setPropostas); }, [obraId, empresaId]);
 
   const days = weekDays(base);
 
@@ -63,7 +63,7 @@ export default function HistoricoPage() {
     if (upErr) { alert('Erro upload: ' + upErr.message); return; }
     const { data: pub } = supabase.storage.from('orvian-evidencias').getPublicUrl(path);
     await EvidenciasService.create({
-      obra_id: obraId, proposta_id: propostaId || null, url: pub.publicUrl, principal: true, data: day.toISOString().slice(0,10),
+      obra_id: obraId, servico_id: propostaId || null, url: pub.publicUrl, principal: true, data: day.toISOString().slice(0,10),
     }, empresaId);
     loadEvids();
   };

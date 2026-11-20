@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService, ServicosService, PlanejamentosService, AtividadesService } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService, PlanejamentosService, AtividadesService } from '@/lib/orvianService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta, Servico, Atividade } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,6 @@ export default function PlanejamentoPage() {
   const { empresaId } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [obraId, setObraId] = useState('');
-  const [propostas, setPropostas] = useState<Proposta[]>([]);
-  const [propostaId, setPropostaId] = useState('');
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [servicoId, setServicoId] = useState('');
   const [plans, setPlans] = useState<any[]>([]);
@@ -33,13 +31,12 @@ export default function PlanejamentoPage() {
   const [resp, setResp] = useState('');
 
   useEffect(() => { ObrasService.list(empresaId).then(setObras); }, [empresaId]);
-  useEffect(() => { if (obraId) PropostasService.listByObra(obraId, empresaId).then(setPropostas); else setPropostas([]); }, [obraId, empresaId]);
-  useEffect(() => { if (propostaId) ServicosService.listByProposta(propostaId, empresaId).then(setServicos); else setServicos([]); }, [propostaId, empresaId]);
-  useEffect(() => { if (obraId) loadPlans(); }, [obraId, propostaId, servicoId]);
+  useEffect(() => { if (obraId) ServicosObraService.listByObraId(empresaId, obraId).then(setServicos); else setServicos([]); }, [obraId, empresaId]);
+  useEffect(() => { if (obraId) loadPlans(); }, [obraId, servicoId]);
 
   const loadPlans = async () => {
     const data = await PlanejamentosService.list(empresaId, obraId);
-    const filtrados = data.filter((d: any) => (!propostaId || d.proposta_id === propostaId) && (!servicoId || d.servico_id === servicoId));
+    const filtrados = data.filter((d: any) => !servicoId || d.servico_id === servicoId);
     setPlans(filtrados);
     // Carrega as atividades diárias (subtarefas) de cada tarefa
     const atividades = await AtividadesService.list(1000, empresaId);
@@ -57,7 +54,7 @@ export default function PlanejamentoPage() {
     if (!obraId || !desc.trim() || !dataOrig) return;
     await PlanejamentosService.create({
       descricao: desc, data_planejada_original: dataOrig, data_planejada_atual: dataOrig,
-      responsavel_id: resp || null, situacao: 'planejado', proposta_id: propostaId || null, servico_id: servicoId || null,
+      responsavel_id: resp || null, situacao: 'planejado', servico_id: servicoId || null,
     }, empresaId, obraId);
     setDesc(''); setDataOrig(''); setResp('');
     loadPlans();
@@ -84,7 +81,7 @@ export default function PlanejamentoPage() {
       }
     }
     await AtividadesService.create({
-      obra_id: obraId, proposta_id: subForm.tarefa.proposta_id, servico_id: subForm.tarefa.servico_id,
+      obra_id: obraId, servico_id: subForm.tarefa.servico_id,
       tarefa_id: subForm.tarefa.id, data: subForm.data, descricao: subForm.descricao,
       status_etapa: 'concluida', fotos: urls,
     } as Atividade, empresaId);
@@ -112,16 +109,12 @@ export default function PlanejamentoPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-2">
-        <select className="border rounded p-2" value={obraId} onChange={(e) => { setObraId(e.target.value); setPropostaId(''); setServicoId(''); }}>
+        <select className="border rounded p-2" value={obraId} onChange={(e) => { setObraId(e.target.value); setServicoId(''); }}>
           <option value="">Obra</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
         </select>
-        <select className="border rounded p-2" value={propostaId} onChange={(e) => { setPropostaId(e.target.value); setServicoId(''); }}>
-          <option value="">Proposta</option>
-          {propostas.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-        </select>
         <select className="border rounded p-2" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
-          <option value="">Serviço</option>
+          <option value="">Serviço / Contrato</option>
           {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
         </select>
       </div>

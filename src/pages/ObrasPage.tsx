@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ObrasService, PropostasService } from '@/lib/orvianService';
+import { ObrasService, ServicosObraService } from '@/lib/orvianService';
 import { useAuth } from '@/context/AuthContext';
-import type { Obra, Proposta } from '@/types';
+import type { Obra, Servico } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
-
-const titulo = (o: Obra) => o.nome || 'Obra sem título';
+import { Plus, Building2 } from 'lucide-react';
 
 export default function ObrasPage() {
   const { empresaId } = useAuth();
@@ -15,8 +13,7 @@ export default function ObrasPage() {
   const [nome, setNome] = useState('');
   const [cliente, setCliente] = useState('');
   const [selected, setSelected] = useState<Obra | null>(null);
-  const [propostas, setPropostas] = useState<Proposta[]>([]);
-  const [propNome, setPropNome] = useState('');
+  const [servicos, setServicos] = useState<Servico[]>([]);
 
   const load = async () => { try { setObras(await ObrasService.list(empresaId)); } catch (e) { console.error(e); } };
   useEffect(() => { load(); }, [empresaId]);
@@ -28,23 +25,14 @@ export default function ObrasPage() {
     load();
   };
 
-  const delObra = async (_id: string) => { /* obras compartilhadas não são excluídas pelo ORVIAN */ };
-
   const openObra = async (o: Obra) => {
     setSelected(o);
-    setPropostas(await PropostasService.listByObra(o.id, empresaId));
-  };
-
-  const addProposta = async () => {
-    if (!selected || !propNome.trim()) return;
-    await PropostasService.create({ obra_id: selected.id, nome: propNome }, empresaId);
-    setPropNome('');
-    setPropostas(await PropostasService.listByObra(selected.id, empresaId));
+    setServicos(await ServicosObraService.listByObraId(empresaId, o.id));
   };
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Obras e Propostas</h1>
+      <h1 className="text-2xl font-bold">Obras e Serviços</h1>
       <Card>
         <CardHeader><CardTitle>Nova Obra</CardTitle></CardHeader>
         <CardContent className="flex gap-2 flex-wrap">
@@ -58,32 +46,23 @@ export default function ObrasPage() {
           <CardHeader><CardTitle>Obras ({obras.length})</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {obras.map((o) => (
-              <div key={o.id} className={`flex items-center justify-between p-2 rounded border ${selected?.id === o.id ? 'bg-slate-100' : ''}`}>
-                <button className="text-left flex-1" onClick={() => openObra(o)}>
-                  <div className="font-medium">{titulo(o)}</div>
-                  <div className="text-xs text-muted-foreground">{o.cliente}</div>
-                </button>
-              </div>
+              <button key={o.id} onClick={() => openObra(o)}
+                className={`w-full text-left p-2 rounded border ${selected?.id === o.id ? 'bg-slate-100' : ''}`}>
+                <div className="font-medium">{o.nome || 'Obra sem título'}</div>
+                <div className="text-xs text-muted-foreground">{o.cliente}</div>
+              </button>
             ))}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Propostas {selected ? `— ${titulo(selected)}` : ''}</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Serviços {selected ? `— ${selected.nome}` : ''}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {selected && (
-              <>
-                <div className="flex gap-2">
-                  <Input placeholder="Nome da proposta" value={propNome} onChange={(e) => setPropNome(e.target.value)} />
-                  <Button onClick={addProposta}><Plus className="w-4 h-4" /></Button>
-                </div>
-                {propostas.map((p) => (
-                  <div key={p.id} className="p-2 rounded border">
-                    <div className="font-medium">{p.nome}</div>
-                    <div className="text-xs text-muted-foreground">{p.situacao}</div>
-                  </div>
-                ))}
-              </>
-            )}
+            {selected && (servicos.length ? servicos.map((s) => (
+              <div key={s.id} className="p-2 border rounded flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <div><div className="font-medium text-sm">{s.nome}</div><div className="text-xs text-muted-foreground">{s.descricao}</div></div>
+              </div>
+            )) : <p className="text-sm text-muted-foreground">Sem serviços aprovados no PreciCalc/DiGest.</p>)}
             {!selected && <p className="text-muted-foreground text-sm">Selecione uma obra.</p>}
           </CardContent>
         </Card>

@@ -11,6 +11,19 @@ function mapObra(db: any): Obra {
   };
 }
 
+// Serviços/contratos da obra (modelo canônico PreciCalc/DiGest).
+// Cada item de obras.projetos é um serviço/contrato independente da mesma obra.
+export const ServicosObraService = {
+  async list(obra: Obra | null): Promise<Servico[]> {
+    return servicosDaObra(obra);
+  },
+  async listByObraId(empresaId: string | null, obraId: string): Promise<Servico[]> {
+    const { data } = await supabase.from('obras' as any)
+      .select('id, titulo, projetos').eq('id', obraId).maybeSingle();
+    return servicosDaObra(data ? mapObra(data) : null);
+  },
+};
+
 // Serviços da obra vindos de obras.projetos — REGRA DO ECOSSISTEMA:
 // obras.projetos é preenchido pelo DiGest APENAS quando o orçamento do PreciCalc
 // é aprovado. Rascunhos/draft/enviado nunca aparecem aqui. O ORVIAN apenas lê;

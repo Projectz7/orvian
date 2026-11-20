@@ -57,7 +57,7 @@ export default function RelatoriosPage() {
               {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
             </select>
             <select className="border rounded p-2" value={propostaId} onChange={(e) => setPropostaId(e.target.value)} disabled={!obraId}>
-              <option value="">Todas as propostas</option>
+              <option value="">Todos os serviços</option>
             </select>
           </div>
 

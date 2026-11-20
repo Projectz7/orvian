@@ -14,7 +14,7 @@ const menu = [
   { to: "/diario", label: "Diário de Obras", icon: BookOpen, short: "Diário" },
   { to: "/controle", label: "Controle Execução", icon: CheckSquare, short: "Controle" },
   { to: "/obras", label: "Obras e Propostas", icon: Building2, short: "Obras" },
-  { to: "/cadastros", label: "Cadastros", icon: Settings, short: "Cadast." },
+  { to: "/cadastros", label: "Serviços da Obra", icon: Settings, short: "Serviços" },
   { to: "/relatorios", label: "Relatórios", icon: FileDown, short: "Relat." },
   { to: "/configuracoes", label: "Configurações", icon: Cog, short: "Config." },
   { to: "/custos", label: "Custos do Projeto", icon: Wallet, short: "Custos" },
