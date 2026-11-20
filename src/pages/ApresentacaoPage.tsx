@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ObrasService, PropostasService, AvancoService, ConfigService, EmpresaService, servicosDaObra } from '@/lib/orvianService';
+import { ObrasService, PropostasService, AvancoService, ConfigService, EmpresaService, CustosService, servicosDaObra } from '@/lib/orvianService';
 import { exportarRelatorio, importarRelatorio } from '@/lib/relatorioService';
 import { supabase } from '@/integrations/supabase/client';
 import type { Obra, Proposta } from '@/types';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlantaMarcacoes, { type Marcacao } from '@/components/PlantaMarcacoes';
 import { useAuth } from '@/context/AuthContext';
-import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon, Maximize2, Minimize2, Camera, Palette, CalendarRange } from 'lucide-react';
+import { Download, Upload, Loader2, BarChart3, PieChart as PieIcon, Maximize2, Minimize2, Camera, Palette, CalendarRange, Wallet, Presentation as SlidesIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const CORES = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -34,6 +34,9 @@ export default function ApresentacaoPage() {
   const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState('');
   const [full, setFull] = useState(false);
+  const [custos, setCustos] = useState<any[]>([]);
+  const [slides, setSlides] = useState<any[]>([]);
+  const [slideAtual, setSlideAtual] = useState(0);
 
   const obra = obras.find((o) => o.id === obraId) || null;
 
@@ -74,6 +77,25 @@ export default function ApresentacaoPage() {
       const doPrecalc = servicosDaObra(obra).map((s) => ({ nome: s.nome, total: 0, concluidas: 0, progresso: 0 }));
       setServicos([...mapa, ...doPrecalc]);
       setDados({ atividades: atividadesCount || 0, diarios: diarios || 0, planejados: planejados || 0, concluidos: concluidos || 0 });
+
+      // Custos (provisionado vs gasto) e slides do diário
+      const lancs = await CustosService.reais(empresaId, obraId);
+      setCustos(lancs);
+      const { data: diariosRaw } = await supabase.from('diario_obra' as any).select('data, descricao, resumo_geral, foto_urls').eq('obra_id', obraId).order('data', { ascending: false }).limit(60);
+      const porDia: Record<string, any> = {};
+      (diariosRaw || []).forEach((d: any) => {
+        const data = d.data;
+        porDia[data] = porDia[data] || { data, itens: [], fotos: [] };
+        porDia[data].itens.push(d.descricao || d.resumo_geral).filter(Boolean);
+        (d.foto_urls || []).forEach((u: string) => porDia[data].fotos.push(u));
+      });
+      (ativs || []).forEach((a: any) => {
+        porDia[a.data] = porDia[a.data] || { data: a.data, itens: [], fotos: [] };
+        if (a.descricao) porDia[a.data].itens.push(a.descricao);
+        (a.fotos || []).forEach((u: string) => porDia[a.data].fotos.push(u));
+      });
+      setSlides(Object.values(porDia).sort((a: any, b: any) => String(b.data).localeCompare(String(a.data))));
+      setSlideAtual(0);
     })();
   }, [obraId, propostaId, empresaId, obra]);
 
@@ -172,11 +194,13 @@ export default function ApresentacaoPage() {
 
       {obraId && (
       <Tabs defaultValue="capa" className={full ? 'flex-1 flex flex-col min-h-0' : ''}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="capa">Capa</TabsTrigger>
           <TabsTrigger value="planta">Planta</TabsTrigger>
           <TabsTrigger value="execucao">Execução</TabsTrigger>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="custos">Custos</TabsTrigger>
+          <TabsTrigger value="slides">Slides Diário</TabsTrigger>
           <TabsTrigger value="planejamento">Próximos Passos</TabsTrigger>
         </TabsList>
 
@@ -317,6 +341,68 @@ export default function ApresentacaoPage() {
         </TabsContent>
 
         {/* PRÓXIMOS PASSOS */}
+        <TabsContent value="custos" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <Card><CardContent className="p-4"><div className="text-xl font-bold text-sky-600">
+              {custos.reduce((s, c) => s + Number(c.provisionado || 0), 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div className="text-xs text-muted-foreground">Provisionado</div></CardContent></Card>
+            <Card><CardContent className="p-4"><div className="text-xl font-bold text-rose-600">
+              {custos.reduce((s, c) => s + Number(c.valor || 0), 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div className="text-xs text-muted-foreground">Gasto</div></CardContent></Card>
+            <Card><CardContent className="p-4"><div className="text-xl font-bold">
+              {(custos.reduce((s, c) => s + Number(c.provisionado || 0), 0) - custos.reduce((s, c) => s + Number(c.valor || 0), 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              <div className="text-xs text-muted-foreground">Saldo</div></CardContent></Card>
+          </div>
+          <Card className="mt-4">
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Wallet className="w-4 h-4" /> Provisionado × Gasto</CardTitle></CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={custos.slice(0, 20).map((c) => ({ nome: (c.natureza || '').slice(0, 16), provisionado: c.provisionado, gasto: c.valor }))}>
+                    <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="nome" angle={-20} textAnchor="end" height={60} /><YAxis />
+                    <Tooltip formatter={(v: any) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} /><Legend />
+                    <Bar dataKey="provisionado" name="Provisionado" fill="#0ea5e9" />
+                    <Bar dataKey="gasto" name="Gasto" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="slides" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2"><SlidesIcon className="w-4 h-4" /> Passagem de Slides — Diário de Obra</span>
+                <span className="text-xs text-muted-foreground">{slides.length ? `${slideAtual + 1} / ${slides.length}` : '0 / 0'}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {slides.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum registro de diário/atividade para apresentar.</p> : (
+                <>
+                  <div className="relative h-96 bg-slate-100 rounded overflow-hidden flex flex-col">
+                    {slides[slideAtual]?.fotos?.[0] && (
+                      <img src={slides[slideAtual].fotos[0]} alt="Foto do dia" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                    )}
+                    <div className="relative z-10 p-6 flex-1 flex flex-col justify-center bg-gradient-to-t from-slate-900/80 to-transparent text-white">
+                      <div className="text-3xl font-bold">{new Date(slides[slideAtual].data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                      <div className="mt-4 space-y-1">
+                        {(slides[slideAtual].itens || []).slice(0, 8).map((t: string, i: number) => <div key={i} className="text-sm">• {t}</div>)}
+                      </div>
+                      <div className="mt-2 text-xs opacity-80">{slides[slideAtual].fotos?.length || 0} foto(s)</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 mt-3">
+                    <Button size="sm" variant="outline" onClick={() => setSlideAtual(Math.max(0, slideAtual - 1))}><ChevronLeft className="w-4 h-4" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => setSlideAtual(Math.min(slides.length - 1, slideAtual + 1))}><ChevronRight className="w-4 h-4" /></Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="planejamento" className={full ? 'flex-1 min-h-0 overflow-auto mt-4' : ''}>
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><CalendarRange className="w-4 h-4" /> Próximos passos e contraste planejado × executado</CardTitle></CardHeader>
