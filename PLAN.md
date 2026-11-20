@@ -146,3 +146,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 20.2 Dashboard: 8 cards + avanço por obra, situação de tarefas, evolução mensal, visão consolidada
 - [x] 20.3 Apresentação filtra dados por obra
 - [x] 20.4 Apresentação: aba Custos (provisionado × gasto, saldo) e aba Slides do Diário (passagem com fotos)
+
+### Etapa 21 — Modelo de serviços e configurações (20/11)
+- [x] 21.1 "Proposta" substituída por Serviço/Contrato da obra (obras.projetos do PreciCalc/DiGest) em Lançamento, Controle, Planejamento, Apresentação, Histórico, Custos e Relatórios
+- [x] 21.2 Aba Cadastros → "Serviços da Obra" (somente leitura; cadastro fica no PreciCalc/DiGest)
+- [x] 21.3 ObrasPage: criação de obra + consulta dos serviços aprovados (sem criar propostas)
+- [x] 21.4 Configurações: dados da empresa somente leitura (P7Store) + configurações específicas do ORVIAN
