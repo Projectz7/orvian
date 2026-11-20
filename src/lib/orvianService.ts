@@ -244,6 +244,41 @@ export const PlanejamentosService = {
 };
 
 // ============================================================
+// ALERTAS — etapas/tarefas atrasadas (balões clicáveis)
+// ============================================================
+export const AlertasService = {
+  async list(empresaId?: string | null): Promise<any[]> {
+    if (!empresaId) return [];
+    const hoje = new Date().toISOString().slice(0, 10);
+    const alertas: any[] = [];
+
+    // Etapas com previsão vencida e não concluídas
+    const { data: etapas } = await supabase.from('orv_controle_execucao' as any)
+      .select('id, status, previsao, etapa_id, etapas!inner(nome, servico_id)')
+      .eq('empresa_id', empresaId).lt('previsao', hoje).neq('status', 'concluido').limit(20);
+    (etapas || []).forEach((c: any) => alertas.push({
+      id: `etapa_${c.id}`, tipo: 'etapa',
+      titulo: `Etapa atrasada: ${c.etapas?.nome || 'Etapa'}`,
+      descricao: `Previsão: ${c.previsao}`,
+      to: '/controle', obra_id: null,
+    }));
+
+    // Tarefas planejadas vencidas
+    const { data: tarefas } = await supabase.from('plano_tarefas' as any)
+      .select('id, titulo, descricao, data_planejada_atual, obra_id')
+      .eq('empresa_id', empresaId).lt('data_planejada_atual', hoje).neq('status', 'concluida').limit(20);
+    (tarefas || []).forEach((t: any) => alertas.push({
+      id: `tarefa_${t.id}`, tipo: 'planejamento',
+      titulo: `Tarefa atrasada: ${t.titulo || t.descricao || 'Tarefa'}`,
+      descricao: `Previsão: ${t.data_planejada_atual}`,
+      to: '/planejamento', obra_id: t.obra_id,
+    }));
+
+    return alertas;
+  },
+};
+
+// ============================================================
 // EMPRESA — dados da P7Store (logo, nome, cores)
 // ============================================================
 export const EmpresaService = {
