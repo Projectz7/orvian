@@ -140,3 +140,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 19.3 informar descrição/natureza, valor total e duração → valor dividido e lançado mês a mês
 - [x] 19.4 painel: total provisionado, gráfico mensal, tabela de lançamentos com exclusão
 - [x] 19.5 colunas `FLUXO_CAIXA` e `PROVISIONAMENTO` adicionadas ao modelo de exportação
+
+### Etapa 20 — Início, Dashboard e Apresentação (20/11)
+- [x] 20.1 Início: identidade da empresa (sem "ORVIAN"), cards de Obra/Atividades/Etapas/Atrasadas com alertas clicáveis
+- [x] 20.2 Dashboard: 8 cards + avanço por obra, situação de tarefas, evolução mensal, visão consolidada
+- [x] 20.3 Apresentação filtra dados por obra
+- [x] 20.4 Apresentação: aba Custos (provisionado × gasto, saldo) e aba Slides do Diário (passagem com fotos)
