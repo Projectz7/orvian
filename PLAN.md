@@ -164,3 +164,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 23.2 PreciCalc: helper `servicosAprovados.ts` + CalculoTab/HistoricoTab usam a RPC
 - [x] 23.3 Commit/push DiGest (`df9f984`) e PreciCalc (`b3a332f`) + deploy Vercel READY
 - [x] 23.4 PreciCalc restaurado do GitHub (diretório local tinha sido esvaziado)
+
+### Etapa 24 — Limpeza de não aprovados (20/11)
+- [x] 24.1 Causa raiz: nome do serviço fica em `data->client->>servico` (a view usava `data->>servico`)
+- [x] 24.2 View/RPC corrigidas — agora retornam somente aprovados (Arena 2, FF 2, NAGUI 2)
+- [x] 24.3 Limpeza de `obras.projetos`: itens não aprovados movidos para `projetos_nao_aprovados` (backup), total recalculado
+- [x] 24.4 Nenhum app consome mais serviço não aprovado
