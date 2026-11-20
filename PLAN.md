@@ -157,4 +157,10 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 22.1 Migration `20261120_servicos_aprovados_regra.sql`: view `v_servicos_obra_aprovados` + RPC `listar_servicos_aprovados_obra`
 - [x] 22.2 Fechada brecha do trigger `trg_budget_servico_obra` (rascunhos não entram mais em obras.projetos)
 - [x] 22.3 ORVIAN usa a RPC compartilhada (Lançamento, Serviços da Obra, Apresentação)
-- [ ] 22.4 Migrar demais apps (DiGest, PreciCalc) para a RPC — regra comum do ecossistema
+- [x] 22.4 Migrar demais apps (DiGest, PreciCalc) para a RPC — regra comum do ecossistema
+
+### Etapa 23 — Regra aplicada em todos os apps (20/11)
+- [x] 23.1 DiGest: helper `servicosAprovados.ts` + CaixaPage/EstoquePage usam a RPC
+- [x] 23.2 PreciCalc: helper `servicosAprovados.ts` + CalculoTab/HistoricoTab usam a RPC
+- [x] 23.3 Commit/push DiGest (`df9f984`) e PreciCalc (`b3a332f`) + deploy Vercel READY
+- [x] 23.4 PreciCalc restaurado do GitHub (diretório local tinha sido esvaziado)
