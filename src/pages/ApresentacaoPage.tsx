@@ -74,7 +74,8 @@ export default function ApresentacaoPage() {
         const concluidas = feitas.filter((a: any) => a.status_etapa === 'concluida').length;
         return { nome: s.nome, total: feitas.length, concluidas, progresso: feitas.length ? Math.round((concluidas / feitas.length) * 100) : 0 };
       });
-      const doPrecalc = servicosDaObra(obra).map((s) => ({ nome: s.nome, total: 0, concluidas: 0, progresso: 0 }));
+      const { data: aprovados } = await supabase.rpc('listar_servicos_aprovados_obra' as any, { p_obra_id: obraId });
+      const doPrecalc = (aprovados || []).map((s: any) => ({ nome: s.nome, total: 0, concluidas: 0, progresso: 0 }));
       setServicos([...mapa, ...doPrecalc]);
       setDados({ atividades: atividadesCount || 0, diarios: diarios || 0, planejados: planejados || 0, concluidos: concluidos || 0 });
 

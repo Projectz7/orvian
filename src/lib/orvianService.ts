@@ -18,9 +18,17 @@ export const ServicosObraService = {
     return servicosDaObra(obra);
   },
   async listByObraId(empresaId: string | null, obraId: string): Promise<Servico[]> {
-    const { data } = await supabase.from('obras' as any)
-      .select('id, titulo, projetos').eq('id', obraId).maybeSingle();
-    return servicosDaObra(data ? mapObra(data) : null);
+    // REGRA COMUM DO ECOSSISTEMA: usar a RPC que retorna SOMENTE
+    // orçamentos aprovados no PreciCalc (nunca ler obras.projetos cru).
+    const { data, error } = await supabase.rpc('listar_servicos_aprovados_obra' as any, { p_obra_id: obraId });
+    if (error) throw error;
+    return (data || []).map((s: any) => ({
+      id: s.id,
+      proposta_id: '',
+      nome: s.nome,
+      descricao: s.valor ? `Valor: ${Number(s.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : null,
+      modelo_acompanhamento: 'simples',
+    })) as Servico[];
   },
 };
 
