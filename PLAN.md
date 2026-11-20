@@ -152,3 +152,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 21.2 Aba Cadastros → "Serviços da Obra" (somente leitura; cadastro fica no PreciCalc/DiGest)
 - [x] 21.3 ObrasPage: criação de obra + consulta dos serviços aprovados (sem criar propostas)
 - [x] 21.4 Configurações: dados da empresa somente leitura (P7Store) + configurações específicas do ORVIAN
+
+### Etapa 22 — Regra comum: só orçamentos aprovados (20/11)
+- [x] 22.1 Migration `20261120_servicos_aprovados_regra.sql`: view `v_servicos_obra_aprovados` + RPC `listar_servicos_aprovados_obra`
+- [x] 22.2 Fechada brecha do trigger `trg_budget_servico_obra` (rascunhos não entram mais em obras.projetos)
+- [x] 22.3 ORVIAN usa a RPC compartilhada (Lançamento, Serviços da Obra, Apresentação)
+- [ ] 22.4 Migrar demais apps (DiGest, PreciCalc) para a RPC — regra comum do ecossistema
