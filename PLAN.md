@@ -176,3 +176,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 25.2 Nome do serviço lido de `data->client->>servico`
 - [x] 25.3 Reversão: ao voltar a rascunho/cancelado, serviço sai de `obras.projetos` e obra sem serviços volta a '1-Orçando'
 - [x] 25.4 Teste validado: aprovar adiciona, voltar a rascunho remove
+
+### Etapa 26 — Obras subordinadas ao PreciCalc (21/11)
+- [x] 26.1 Diagnóstico conta viron.vrpj@gmail.com: 6 obras (5 orçando, 1 aprovada)
+- [x] 26.2 DiGest filtra obras por status '3-Aprovado'/'7-Concluído' (commit 030d6e1)
+- [x] 26.3 ORVIAN filtra obras pelo mesmo status (commit 247d334)
+- [x] 26.4 Deploys Vercel READY
