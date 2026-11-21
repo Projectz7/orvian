@@ -56,6 +56,8 @@ export const ObrasService = {
   async list(empresaId?: string | null): Promise<Obra[]> {
     let q = supabase.from('obras').select('id, titulo, cliente, cliente_id, endereco, status, responsavel, data_inicio, data_fim, empresa_id, created_at, projetos');
     if (empresaId) q = q.eq('empresa_id', empresaId);
+    // REGRA COMUM: só obras com orçamento aprovado no PreciCalc (ou concluídas)
+    q = q.in('status', ['3-Aprovado', '7-Concluído']);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
     return (data || []).map(mapObra);
