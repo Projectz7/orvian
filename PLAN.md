@@ -170,3 +170,9 @@ Orvian é o app de planejamento e controle de obras do ecossistema P7Store. Gere
 - [x] 24.2 View/RPC corrigidas — agora retornam somente aprovados (Arena 2, FF 2, NAGUI 2)
 - [x] 24.3 Limpeza de `obras.projetos`: itens não aprovados movidos para `projetos_nao_aprovados` (backup), total recalculado
 - [x] 24.4 Nenhum app consome mais serviço não aprovado
+
+### Etapa 25 — PreciCalc como fonte da verdade (21/11)
+- [x] 25.1 Bug corrigido: trigger chamava `vincular_servico_obra` com 3 args (função espera 4: empresa_id, obra_id, nome, valor)
+- [x] 25.2 Nome do serviço lido de `data->client->>servico`
+- [x] 25.3 Reversão: ao voltar a rascunho/cancelado, serviço sai de `obras.projetos` e obra sem serviços volta a '1-Orçando'
+- [x] 25.4 Teste validado: aprovar adiciona, voltar a rascunho remove
